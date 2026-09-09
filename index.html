@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MJ Envelopamento — Painel Administrativo V11.11</title>
+<link rel="stylesheet" href="css/styles-v11-12.css" />
+</head>
+<body>
+<div id="appLoadingOverlay" class="app-loading-overlay" aria-live="polite" aria-busy="true">
+  <div class="app-loading-card">
+    <div class="app-loading-brand">
+      <img src="assets/mj_logo.png" alt="MJ Envelopamento">
+    </div>
+    <div id="appLoadingSpinner" class="app-loading-spinner" aria-hidden="true"></div>
+    <div id="appLoadingIcon" class="app-loading-icon" hidden>!</div>
+    <h2 id="appLoadingTitle">Carregando o sistema...</h2>
+    <p id="appLoadingMessage">Conectando ao Google Sheets</p>
+    <div class="app-loading-progress"><span id="appLoadingProgress"></span></div>
+    <small id="appLoadingHint">Aguarde alguns instantes. Os dados estão sendo sincronizados.</small>
+    <div id="appLoadingActions" class="app-loading-actions" hidden>
+      <button id="retryAppLoadBtn" class="btn btn-primary" type="button">Tentar novamente</button>
+      <button id="useCacheAppLoadBtn" class="btn btn-ghost" type="button">Usar dados locais</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-block">
+      <div class="brand-card">
+        <img alt="MJ Envelopamento" src="assets/mj_brand.png">
+      </div>
+      <div class="brand-contact">
+        <span>● 85 9.8161-7494</span>
+        <span>@GRAFICAMJ2012</span>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="active" data-view="dashboard"><span class="icon">⌂</span><span>Dashboard</span></button>
+      <button data-view="nova-venda"><span class="icon">🛒</span><span>Nova Venda</span></button>
+      <button data-view="vendas"><span class="icon">▤</span><span>Vendas</span></button>
+      <button data-view="orcamentos"><span class="icon">🧾</span><span>Orçamentos</span></button>
+      <button data-view="produtos"><span class="icon">◫</span><span>Produtos</span></button>
+      <button data-view="clientes"><span class="icon">👥</span><span>Clientes</span></button>
+      <button data-view="fornecedores"><span class="icon">🚚</span><span>Fornecedores</span></button>
+      <button data-view="estoque"><span class="icon">▦</span><span>Estoque</span></button>
+      <button data-view="financeiro"><span class="icon">$</span><span>Financeiro</span></button>
+      <button data-view="despesas"><span class="icon">▣</span><span>Despesas</span></button>
+      <button data-view="relatorios"><span class="icon">▥</span><span>Relatórios</span></button>
+      <button data-view="configuracoes"><span class="icon">⚙</span><span>Configurações</span></button>
+    </nav>
+    <div class="sidebar-footer">QUALIDADE<br>QUE TRANSFORMA<br>SEU ESTILO<div class="cmyk-line"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu" aria-expanded="false">☰</button>
+      <div class="hello"><h1>Olá, Caio! 👋</h1><p>Seja bem-vindo ao seu painel de gestão.</p></div>
+      <div class="top-actions">
+        <label class="search">⌕ <input placeholder="Buscar algo..." /></label>
+        <button class="circle-btn" aria-label="Notificações">🔔</button>
+        <div class="user"><div class="avatar">C</div><div><b>Caio</b><small>Administrador</small></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="view active" id="dashboard">
+        <div class="hero"><div><h3>Transforme ideias em <span>grandes projetos</span></h3><p>Qualidade • Estilo • Personalização</p></div></div>
+        <div class="cards">
+          <article class="metric"><div class="metric-top"><div><label>Vendas Hoje</label><strong id="dashSalesToday">0</strong></div><div class="micon" style="background:linear-gradient(135deg,#772cff,#5a18db)">🛒</div></div><div class="trend">Dados de hoje</div></article>
+          <article class="metric"><div class="metric-top"><div><label>Faturamento Hoje</label><strong id="dashRevenueToday">R$ 0,00</strong></div><div class="micon" style="background:linear-gradient(135deg,#20d988,#0fae61)">$</div></div><div class="trend">Recebimentos confirmados</div></article>
+          <article class="metric"><div class="metric-top"><div><label>Lucro Estimado</label><strong id="dashProfitToday">R$ 0,00</strong></div><div class="micon" style="background:linear-gradient(135deg,#25a8ff,#047dd5)">▥</div></div><div class="trend">Estimativa com dados cadastrados</div></article>
+          <article class="metric"><div class="metric-top"><div><label>Despesas Hoje</label><strong id="dashExpensesToday">R$ 0,00</strong></div><div class="micon" style="background:linear-gradient(135deg,#ff4b8c,#ef236b)">▣</div></div><div class="trend red">Pagamentos realizados hoje</div></article>
+          <article class="metric"><div class="metric-top"><div><label>Orçamentos Pendentes</label><strong id="dashQuotesPending">0</strong></div><div class="micon" style="background:linear-gradient(135deg,#ffcd2d,#ef9f00)">🧾</div></div><div class="trend">Aguardando aprovação</div></article>
+        </div>
+        <div class="grid-2">
+          <article class="panel"><div class="panel-head"><h3>Vendas dos últimos 7 dias</h3></div><div class="chart" id="dashboardSalesChart"></div></article>
+          <article class="panel"><div class="panel-head"><h3>Formas de Pagamento</h3></div><div class="donut-wrap" id="dashboardPaymentMethods"><div class="empty-note">Nenhuma venda paga registrada.</div></div></article>
+        </div>
+        <div class="grid-2">
+          <article class="panel"><div class="panel-head"><h3>Últimas vendas</h3><a href="#" data-goto="vendas">Ver todas</a></div><table class="data-table"><thead><tr><th>#</th><th>Cliente</th><th>Valor</th><th>Pagamento</th><th>Status</th></tr></thead><tbody id="dashboardRecentSalesBody"></tbody></table></article>
+          <article class="panel"><div class="panel-head"><h3>Produtos com estoque baixo</h3><a href="#" data-goto="estoque">Ver todos</a></div><table class="data-table"><thead><tr><th>Produto</th><th>Estoque</th><th>Mínimo</th></tr></thead><tbody id="dashboardLowStockBody"></tbody></table></article>
+        </div>
+        <div class="quick"><button class="quick-card" data-goto="nova-venda"><span class="qicon" style="background:#6a20ff">🛒</span><span><b>Nova Venda</b><small>Registrar uma nova venda</small></span></button><button class="quick-card" id="dashboardNewQuoteBtn" data-goto="orcamentos"><span class="qicon" style="background:#f5ab00">🧾</span><span><b>Novo Orçamento</b><small>Criar e salvar orçamento</small></span></button><button class="quick-card" data-goto="produtos"><span class="qicon" style="background:#118af0">◫</span><span><b>Cadastrar Produto</b><small>Adicionar novo produto</small></span></button><button class="quick-card" data-goto="despesas"><span class="qicon" style="background:#18b76a">▣</span><span><b>Registrar Despesa</b><small>Adicionar uma despesa</small></span></button></div>
+      </section>
+
+      <section class="view" id="nova-venda">
+        <div class="page-head"><div><h2>Nova Venda</h2><p>Registre a venda, receba o pagamento e atualize o estoque automaticamente.</p></div><div class="sale-head-actions"><button class="btn btn-line" id="clearSaleBtn">Limpar</button><button class="btn btn-primary" id="finishSaleBtn">✓ Finalizar venda</button></div></div>
+        <div id="saleSourceBanner" class="sale-source-banner" hidden></div>
+        <div class="quote-layout sale-layout">
+          <article class="panel">
+            <div class="form-grid">
+              <div class="field span-6"><label>Cliente</label><select id="saleClient"><option value="">Cliente Balcão</option></select></div>
+              <div class="field span-3"><label>Data</label><input id="saleDate" type="date"></div>
+              <div class="field span-3"><label>Vendedor</label><input id="saleSeller" value="Caio"></div>
+            </div>
+            <div class="items-card sale-items-card">
+              <div class="sale-item-add">
+                <div class="field"><label>Produto / serviço</label><select id="saleProductSelect"><option value="">Selecione...</option></select></div>
+                <div class="field"><label>Quantidade</label><input id="saleItemQty" type="number" min="0.01" step="0.01" value="1"></div>
+                <div class="field"><label>Valor unitário</label><input id="saleItemPrice" inputmode="decimal" placeholder="0,00"></div>
+                <button class="btn btn-soft" id="addSaleItemBtn">＋ Adicionar</button>
+              </div>
+              <div class="table-scroll"><table class="data-table sale-items-table"><thead><tr><th>Produto</th><th>Qtd.</th><th>Unitário</th><th>Subtotal</th><th></th></tr></thead><tbody id="saleItemsBody"></tbody></table></div>
+              <div id="saleEmptyItems" class="empty-note sale-empty">Nenhum item adicionado à venda.</div>
+            </div>
+          </article>
+          <aside class="panel sale-summary-panel">
+            <div class="panel-head"><h3>Resumo da venda</h3><span id="saleNumberPreview" class="sale-number">VENDA NOVA</span></div>
+            <div class="summary"><div class="summary-row"><span>Subtotal</span><b id="saleSubtotal">R$ 0,00</b></div><div class="sale-discount"><label>Desconto</label><div class="money-input"><span>R$</span><input id="saleDiscount" inputmode="decimal" value="0,00"></div></div><div class="summary-row total"><span>Total</span><span id="saleTotal">R$ 0,00</span></div></div>
+            <div class="field span-12" style="margin-top:14px"><label>Forma de pagamento</label><select id="salePayment"><option>PIX</option><option>Dinheiro</option><option>Cartão Débito</option><option>Cartão Crédito</option><option>InfinitePay</option></select></div>
+            <div id="infinitePaySaleNotice" class="ip-sale-notice" hidden><div class="ip-mini-logo">∞</div><div><b>Pagamento via InfinitePay</b><span>A venda será criada como pendente e o checkout será aberto para o cliente.</span></div></div>
+            <div class="field span-12" style="margin-top:12px"><label>Status</label><select id="saleStatus"><option>Pago</option><option>Pendente</option></select></div>
+            <div class="field span-12" style="margin-top:12px"><label>Observação</label><textarea id="saleObs" placeholder="Informações adicionais da venda..."></textarea></div>
+            <div class="sale-stock-note">Ao finalizar, produtos controlados terão o estoque baixado automaticamente.</div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="vendas">
+        <div class="page-head"><div><h2>Vendas</h2><p>Histórico completo das vendas realizadas.</p></div><button class="btn btn-primary" id="newSaleBtn">＋ Nova venda</button></div>
+        <div class="cards sale-stats"><article class="metric"><label>Vendas registradas</label><strong id="saleCount">0</strong><small>histórico total</small></article><article class="metric"><label>Vendas pagas</label><strong id="salePaidCount">0</strong><small>concluídas</small></article><article class="metric"><label>Faturamento</label><strong id="saleRevenue">R$ 0,00</strong><small>vendas pagas</small></article><article class="metric"><label>Pendentes</label><strong id="salePendingValue">R$ 0,00</strong><small>a receber</small></article></div>
+        <article class="panel"><div class="toolbar sale-toolbar"><input id="saleSearch" class="search-mini" placeholder="Buscar por cliente ou número"><select id="saleStatusFilter"><option value="">Todos os status</option><option>Pago</option><option>Pendente</option><option>Cancelado</option></select><input id="saleDateFilter" type="date"><button class="btn btn-line" id="clearSaleFilters">Limpar</button><span id="saleResultCount" class="result-count"></span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Valor</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="salesBody"></tbody></table></div></article>
+      </section>
+
+      <section class="view" id="orcamentos">
+        <div class="page-head">
+          <div><h2>Orçamentos</h2><p>Crie propostas completas, acompanhe o retorno do cliente e converta em venda.</p></div>
+          <button class="btn btn-primary" id="newQuoteBtn">＋ Novo orçamento</button>
+        </div>
+
+        <div class="cards quote-stats">
+          <article class="metric"><label>Total de orçamentos</label><strong id="quoteCount">0</strong><div class="trend">Histórico salvo</div></article>
+          <article class="metric"><label>Pendentes</label><strong id="quotePendingCount">0</strong><div class="trend">Aguardando retorno</div></article>
+          <article class="metric"><label>Aprovados</label><strong id="quoteApprovedCount">0</strong><div class="trend">Prontos para venda</div></article>
+          <article class="metric"><label>Valor em aberto</label><strong id="quoteOpenValue">R$ 0,00</strong><div class="trend">Pendentes + aprovados</div></article>
+        </div>
+
+        <article class="panel quote-editor" id="quoteForm" style="margin-bottom:16px;display:none">
+          <div class="panel-head">
+            <div><h3 id="quoteFormTitle">Novo orçamento</h3><p class="panel-subtitle">Selecione o cliente, adicione produtos ou serviços e defina as condições.</p></div>
+            <button class="btn btn-line" id="closeQuoteBtn" type="button">Fechar</button>
+          </div>
+          <input type="hidden" id="quoteEditId">
+          <div class="form-grid">
+            <div class="field span-6"><label>Cliente *</label><select id="quoteClientSelect"><option value="">Selecione um cliente</option></select></div>
+            <div class="field span-3"><label>Data</label><input id="quoteDate" type="date"></div>
+            <div class="field span-3"><label>Número</label><input id="quoteNumber" readonly></div>
+            <div class="field span-3"><label>Validade</label><input id="quoteValidity" type="date"></div>
+            <div class="field span-3"><label>Status</label><select id="quoteStatus"><option>Pendente</option><option>Aprovado</option><option>Recusado</option><option>Expirado</option></select></div>
+            <div class="field span-6"><label>Condição de pagamento</label><input id="quotePaymentTerms" placeholder="Ex.: 50% entrada + 50% na entrega"></div>
+            <div class="field span-12"><label>Descrição / observações</label><textarea id="quoteObs" placeholder="Detalhes do serviço, medidas, aplicação, prazo de execução, garantia..."></textarea></div>
+          </div>
+
+          <div class="items-card quote-items-card">
+            <div class="quote-item-add">
+              <div class="field"><label>Produto / Serviço</label><select id="quoteProductSelect"><option value="">Selecione um item</option></select></div>
+              <div class="field"><label>Qtd.</label><input id="quoteItemQty" type="number" min="0.01" step="0.01" value="1"></div>
+              <div class="field"><label>Valor unitário</label><input id="quoteItemPrice" inputmode="decimal" placeholder="0,00"></div>
+              <button class="btn btn-soft" id="addQuoteItemBtn" type="button">＋ Adicionar item</button>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table quote-items-table"><thead><tr><th>Produto/Serviço</th><th>Qtd.</th><th>Unitário</th><th>Subtotal</th><th></th></tr></thead><tbody id="quoteItemsBody"></tbody></table>
+            </div>
+          </div>
+
+          <div class="quote-bottom">
+            <div class="quote-notes"><small>Os valores são calculados automaticamente. O desconto pode ser informado em reais.</small></div>
+            <div class="quote-totals">
+              <div class="summary-row"><span>Subtotal</span><b id="quoteSubtotalLabel">R$ 0,00</b></div>
+              <div class="quote-discount-row"><label>Desconto</label><div class="money-input"><span>R$</span><input id="quoteDiscount" inputmode="decimal" value="0,00"></div></div>
+              <div class="summary-row total"><span>Total</span><span id="quoteTotalLabel">R$ 0,00</span></div>
+            </div>
+          </div>
+          <div class="quote-form-actions">
+            <button class="btn btn-line" id="previewQuoteBtn" type="button">Visualizar / Imprimir</button>
+            <button class="btn btn-primary" id="saveQuoteBtn" type="button">Salvar orçamento</button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="toolbar quote-toolbar">
+            <input class="search-mini" id="quoteSearch" placeholder="Buscar por cliente ou número">
+            <select id="quoteStatusFilter"><option value="">Todos os status</option><option>Pendente</option><option>Aprovado</option><option>Recusado</option><option>Expirado</option><option>Convertido</option></select>
+            <button class="btn btn-line" id="clearQuoteFilters" type="button">Limpar filtros</button>
+            <span class="result-count" id="quoteResultCount">0 orçamento(s)</span>
+          </div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>Nº</th><th>Data</th><th>Cliente</th><th>Valor</th><th>Validade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="quotesBody"></tbody></table></div>
+          <div class="saved-note">Os orçamentos são sincronizados com o Google Sheets e mantêm cache local para melhor experiência.</div>
+        </article>
+      </section>
+
+      <div class="quote-modal" id="quoteModal" aria-hidden="true">
+        <div class="quote-modal-backdrop" data-close-quote-modal></div>
+        <div class="quote-modal-card">
+          <div class="panel-head"><div><h3 id="quoteModalTitle">Orçamento</h3><p class="panel-subtitle" id="quoteModalSubtitle"></p></div><button class="btn btn-line" type="button" data-close-quote-modal>Fechar</button></div>
+          <div id="quoteModalContent"></div>
+        </div>
+      </div>
+
+      <section class="view" id="produtos">
+        <div class="page-head">
+          <div><h2>Produtos</h2><p>Cadastre produtos e serviços, acompanhe preços e estoque.</p></div>
+          <button class="btn btn-primary" id="newProductBtn">＋ Cadastrar produto</button>
+        </div>
+
+        <div class="cards product-stats">
+          <article class="metric"><label>Produtos cadastrados</label><strong id="productCount">0</strong><div class="trend">Itens ativos e inativos</div></article>
+          <article class="metric"><label>Produtos ativos</label><strong id="productActiveCount">0</strong><div class="trend">Disponíveis para venda</div></article>
+          <article class="metric"><label>Estoque baixo</label><strong id="productLowCount">0</strong><div class="trend red">Abaixo ou igual ao mínimo</div></article>
+          <article class="metric"><label>Valor em estoque</label><strong id="productStockValue">R$ 0,00</strong><div class="trend">Baseado no preço de custo</div></article>
+        </div>
+
+        <article class="panel product-form-panel" id="productFormPanel" style="display:none;margin-bottom:16px">
+          <div class="panel-head">
+            <div><h3 id="productFormTitle">Cadastrar produto</h3><p class="panel-subtitle">Preencha os dados abaixo e salve o cadastro.</p></div>
+            <button class="btn btn-line" id="closeProductBtn" type="button">Fechar</button>
+          </div>
+          <form id="productForm" autocomplete="off">
+            <input type="hidden" id="productEditId">
+            <div class="form-grid">
+              <div class="field span-3"><label>Código</label><input id="productCode" placeholder="Automático" maxlength="30"></div>
+              <div class="field span-6"><label>Nome do produto *</label><input id="productName" placeholder="Nome do produto ou serviço" required></div>
+              <div class="field span-3"><label>Categoria *</label><input id="productCategory" list="productCategoryList" placeholder="Categoria" required><datalist id="productCategoryList"><option value="Adesivos"><option value="Películas"><option value="Serviços"><option value="Impressão"><option value="Acessórios"></datalist></div>
+              <div class="field span-3"><label>Unidade</label><select id="productUnit"><option value="UN">Unidade (UN)</option><option value="M">Metro (M)</option><option value="M²">Metro² (M²)</option><option value="RL">Rolo (RL)</option><option value="SV">Serviço (SV)</option></select></div>
+              <div class="field span-3"><label>Preço de custo</label><input id="productCost" inputmode="decimal" placeholder="0,00"></div>
+              <div class="field span-3"><label>Preço de venda</label><input id="productPrice" inputmode="decimal" placeholder="Deixe em branco para preço variável"><small class="field-hint">Opcional. Em serviços/mão de obra, o valor pode ser informado no orçamento ou na venda.</small></div>
+              <div class="field span-3"><label>Tipo de preço</label><label class="variable-price-toggle"><input id="productVariablePrice" type="checkbox"><span><b>Preço variável</b><small>Solicitar valor manual na venda/orçamento</small></span></label></div>
+              <div class="field span-3"><label>Fornecedor</label><input id="productSupplier" placeholder="Fornecedor opcional"></div>
+              <div class="field span-3"><label>Estoque atual</label><input id="productStock" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field span-3"><label>Estoque mínimo</label><input id="productMinStock" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field span-3"><label>Status</label><select id="productStatus"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div>
+              <div class="field span-12"><label>Descrição</label><textarea id="productDescription" placeholder="Detalhes, marca, aplicação, medidas ou observações..."></textarea></div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-line" id="cancelProductBtn" type="button">Cancelar</button>
+              <button class="btn btn-primary" type="submit" id="saveProductBtn">Salvar produto</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="toolbar product-toolbar">
+            <input class="search-mini" id="productSearch" placeholder="Buscar por nome, código ou fornecedor">
+            <select id="productCategoryFilter"><option value="">Todas as categorias</option></select>
+            <select id="productStatusFilter"><option value="">Todos os status</option><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option></select>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Custo</th><th>Venda</th><th>Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="productsBody"></tbody>
+          </table>
+          <div class="saved-note"><span id="productResultCount">0 produto(s)</span> • Dados sincronizados com o Google Sheets; o navegador mantém apenas cache local.</div>
+        </article>
+      </section>
+
+      <section class="view" id="clientes">
+        <div class="page-head"><div><h2>Clientes</h2><p>Cadastre, consulte e mantenha os dados dos clientes da MJ.</p></div><button class="btn btn-primary" id="newClientBtn">＋ Novo cliente</button></div>
+
+        <div class="cards client-stats">
+          <div class="metric"><div><small>CLIENTES CADASTRADOS</small><strong id="clientCount">0</strong><em>Base total</em></div><span class="metric-icon purple">👥</span></div>
+          <div class="metric"><div><small>CLIENTES ATIVOS</small><strong id="clientActiveCount">0</strong><em>Disponíveis para vendas</em></div><span class="metric-icon green">✓</span></div>
+          <div class="metric"><div><small>PESSOA FÍSICA</small><strong id="clientPFCount">0</strong><em>Cadastros PF</em></div><span class="metric-icon blue">☺</span></div>
+          <div class="metric"><div><small>PESSOA JURÍDICA</small><strong id="clientPJCount">0</strong><em>Empresas cadastradas</em></div><span class="metric-icon orange">▣</span></div>
+        </div>
+
+        <article class="panel client-form-panel" id="clientFormPanel" style="display:none;margin-bottom:16px">
+          <div class="panel-head"><div><h3 id="clientFormTitle">Cadastrar cliente</h3><p class="panel-subtitle">Preencha os dados comerciais e de contato.</p></div><button class="btn btn-line" id="closeClientBtn" type="button">Fechar</button></div>
+          <form id="clientForm">
+            <input type="hidden" id="clientEditId">
+            <div class="form-grid">
+              <div class="field span-3"><label>Tipo de pessoa *</label><select id="clientType"><option value="PF">Pessoa Física</option><option value="PJ">Pessoa Jurídica</option></select></div>
+              <div class="field span-3"><label id="clientDocLabel">CPF *</label><input id="clientDocument" inputmode="numeric" placeholder="000.000.000-00" maxlength="18"></div>
+              <div class="field span-6"><label id="clientNameLabel">Nome completo *</label><input id="clientName" placeholder="Nome do cliente"></div>
+              <div class="field span-6 pj-only" style="display:none"><label>Nome fantasia</label><input id="clientTradeName" placeholder="Nome fantasia da empresa"></div>
+              <div class="field span-3"><label>Telefone</label><input id="clientPhone" inputmode="tel" placeholder="(85) 99999-9999"></div>
+              <div class="field span-3"><label>WhatsApp</label><input id="clientWhatsapp" inputmode="tel" placeholder="(85) 99999-9999"></div>
+              <div class="field span-6"><label>E-mail</label><input id="clientEmail" type="email" placeholder="E-mail do cliente"></div>
+              <div class="field span-3"><label>CEP</label><input id="clientZip" inputmode="numeric" placeholder="00000-000" maxlength="9"></div>
+              <div class="field span-6"><label>Endereço</label><input id="clientAddress" placeholder="Rua, avenida, número e complemento"></div>
+              <div class="field span-3"><label>Bairro</label><input id="clientDistrict" placeholder="Bairro"></div>
+              <div class="field span-5"><label>Cidade</label><input id="clientCity" placeholder="Cidade"></div>
+              <div class="field span-2"><label>UF</label><select id="clientState"><option value="">UF</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div>
+              <div class="field span-2"><label>Status</label><select id="clientStatus"><option>Ativo</option><option>Inativo</option></select></div>
+              <div class="field span-3"><label>Data de cadastro</label><input id="clientCreatedAt" type="date"></div>
+              <div class="field span-12"><label>Observações</label><textarea id="clientNotes" placeholder="Preferências, referências, informações importantes para atendimento..."></textarea></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-line" id="cancelClientBtn" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Salvar cliente</button></div>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="toolbar"><input class="search-mini" id="clientSearch" placeholder="Buscar por nome, CPF/CNPJ, telefone ou e-mail"><select id="clientTypeFilter"><option value="">Todos os tipos</option><option value="PF">Pessoa Física</option><option value="PJ">Pessoa Jurídica</option></select><select id="clientStatusFilter"><option value="">Todos os status</option><option>Ativo</option><option>Inativo</option></select><span class="result-count" id="clientResultCount">0 cliente(s)</span></div>
+          <table class="data-table"><thead><tr><th>Cliente</th><th>CPF/CNPJ</th><th>Contato</th><th>Cidade/UF</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead><tbody id="clientsBody"></tbody></table>
+          <div class="saved-note">Os clientes desta versão ficam salvos no navegador usando localStorage.</div>
+        </article>
+
+        <div class="client-modal" id="clientModal" aria-hidden="true">
+          <div class="client-modal-backdrop" data-close-client-modal></div>
+          <div class="client-modal-card" role="dialog" aria-modal="true" aria-labelledby="clientModalTitle">
+            <div class="panel-head"><div><h3 id="clientModalTitle">Detalhes do cliente</h3><p class="panel-subtitle" id="clientModalSubtitle"></p></div><button class="action-btn" data-close-client-modal type="button">✕</button></div>
+            <div id="clientModalContent"></div>
+          </div>
+        </div>
+      </section>
+      <section class="view" id="fornecedores"><div class="page-head"><div><h2>Fornecedores</h2><p>Contatos e fornecedores dos materiais utilizados.</p></div><button class="btn btn-primary">＋ Novo fornecedor</button></div><article class="panel"><div class="empty-note">Área pronta para o cadastro de fornecedores.</div></article></section>
+      <section class="view" id="estoque"><div class="page-head"><div><h2>Estoque</h2><p>Acompanhe a posição atual e os itens abaixo do estoque mínimo.</p></div><button class="btn btn-primary" onclick="go('produtos'); openProductForm();">＋ Cadastrar produto</button></div><div class="cards stock-stats" style="grid-template-columns:repeat(3,1fr)"><article class="metric"><label>Quantidade em estoque</label><strong id="stockTotalQty">0</strong></article><article class="metric"><label>Estoque baixo</label><strong id="stockLowCount">0</strong></article><article class="metric"><label>Valor estimado</label><strong id="stockTotalValue">R$ 0,00</strong></article></div><article class="panel"><div class="toolbar"><input class="search-mini" id="stockSearch" placeholder="Buscar produto no estoque"></div><table class="data-table"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Atual</th><th>Mínimo</th><th>Situação</th></tr></thead><tbody id="stockBody"></tbody></table></article></section>
+      <section class="view" id="financeiro">
+        <div class="page-head"><div><h2>Financeiro</h2><p>Entradas, saídas, contas pendentes e fluxo de caixa.</p></div><button class="btn btn-primary" id="newFinancialBtn">＋ Novo lançamento</button></div>
+        <div class="cards finance-stats">
+          <article class="metric"><label>Entradas pagas no mês</label><strong id="financeIncome">R$ 0,00</strong><div class="trend" id="financeIncomeCount">0 recebimento(s)</div></article>
+          <article class="metric"><label>Saídas pagas no mês</label><strong id="financeExpense">R$ 0,00</strong><div class="trend red" id="financeExpenseCount">0 pagamento(s)</div></article>
+          <article class="metric"><label>Saldo realizado</label><strong id="financeBalance">R$ 0,00</strong><div class="trend" id="financeBalanceHint">Entradas - saídas</div></article>
+          <article class="metric"><label>Contas a receber</label><strong id="financeReceivable">R$ 0,00</strong><div class="trend pending-text" id="financeReceivableCount">0 pendente(s)</div></article>
+          <article class="metric"><label>Contas a pagar</label><strong id="financePayable">R$ 0,00</strong><div class="trend red" id="financePayableCount">0 pendente(s)</div></article>
+        </div>
+
+        <article class="panel finance-chart-panel">
+          <div class="panel-head"><div><h3>Fluxo dos últimos 6 meses</h3><p class="panel-subtitle">Valores realizados de entradas e saídas.</p></div><span class="result-count" id="financePeriodLabel"></span></div>
+          <div class="finance-bars" id="financeBars"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head"><div><h3>Lançamentos financeiros</h3><p class="panel-subtitle">Vendas, despesas e lançamentos manuais em um único lugar.</p></div><span class="result-count" id="financeResultCount">0 lançamento(s)</span></div>
+          <div class="toolbar finance-toolbar">
+            <input class="search-mini" id="financeSearch" placeholder="Buscar descrição, origem ou pagamento">
+            <select id="financeTypeFilter"><option value="">Entradas e saídas</option><option>Entrada</option><option>Saída</option></select>
+            <select id="financeStatusFilter"><option value="">Todos os status</option><option>Pago</option><option>Pendente</option></select>
+            <input type="month" id="financeMonthFilter">
+            <button class="btn btn-line btn-small" id="clearFinanceFilters">Limpar</button>
+          </div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>Data</th><th>Descrição</th><th>Origem</th><th>Tipo</th><th>Valor</th><th>Pagamento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="financeBody"></tbody></table></div>
+          <div class="saved-note">Os lançamentos ficam salvos no navegador nesta etapa do projeto.</div>
+        </article>
+
+        <article class="panel form-panel" id="financialFormPanel" hidden>
+          <div class="panel-head"><div><h3 id="financialFormTitle">Novo lançamento</h3><p class="panel-subtitle">Registre uma entrada ou saída manual.</p></div><button class="action-btn" id="closeFinancialBtn" type="button">✕</button></div>
+          <form id="financialForm"><input type="hidden" id="financialEditId"><div class="form-grid">
+            <div class="field span-3"><label>Tipo *</label><select id="financialType"><option>Entrada</option><option>Saída</option></select></div>
+            <div class="field span-3"><label>Status *</label><select id="financialStatus"><option>Pago</option><option>Pendente</option></select></div>
+            <div class="field span-3"><label>Data *</label><input id="financialDate" type="date"></div>
+            <div class="field span-3"><label>Vencimento</label><input id="financialDueDate" type="date"></div>
+            <div class="field span-6"><label>Descrição *</label><input id="financialDescription" placeholder="Ex.: Serviço recebido, aluguel, taxa..."></div>
+            <div class="field span-3"><label>Categoria</label><input id="financialCategory" list="financeCategoryList" placeholder="Categoria"><datalist id="financeCategoryList"><option value="Vendas"><option value="Serviços"><option value="Estoque"><option value="Operacional"><option value="Marketing"><option value="Impostos"><option value="Taxas"><option value="Outros"></datalist></div>
+            <div class="field span-3"><label>Valor *</label><input id="financialValue" inputmode="decimal" placeholder="0,00"></div>
+            <div class="field span-4"><label>Forma de pagamento</label><select id="financialPayment"><option>PIX</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>InfinitePay</option><option>Boleto</option><option>Transferência</option><option>Outro</option></select></div>
+            <div class="field span-8"><label>Observações</label><input id="financialNotes" placeholder="Informações adicionais"></div>
+          </div><div class="form-actions"><button class="btn btn-line" id="cancelFinancialBtn" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Salvar lançamento</button></div></form>
+        </article>
+      </section>
+
+      <section class="view" id="despesas">
+        <div class="page-head"><div><h2>Despesas</h2><p>Cadastre contas e acompanhe os pagamentos do negócio.</p></div><button class="btn btn-primary" id="newExpenseBtn">＋ Registrar despesa</button></div>
+        <div class="cards expense-stats">
+          <article class="metric"><label>Despesas pagas no mês</label><strong id="expensePaidMonth">R$ 0,00</strong></article>
+          <article class="metric"><label>Pendente de pagamento</label><strong id="expensePendingValue">R$ 0,00</strong></article>
+          <article class="metric"><label>Vencidas</label><strong id="expenseOverdueCount">0</strong></article>
+          <article class="metric"><label>Total cadastrado</label><strong id="expenseTotalCount">0</strong></article>
+        </div>
+        <article class="panel form-panel" id="expenseFormPanel" hidden>
+          <div class="panel-head"><div><h3 id="expenseFormTitle">Registrar despesa</h3><p class="panel-subtitle">Contas pagas ou pendentes alimentam automaticamente o financeiro.</p></div><button class="action-btn" id="closeExpenseBtn" type="button">✕</button></div>
+          <form id="expenseForm"><input type="hidden" id="expenseEditId"><div class="form-grid">
+            <div class="field span-3"><label>Data de lançamento *</label><input id="expenseDate" type="date"></div>
+            <div class="field span-3"><label>Vencimento *</label><input id="expenseDueDate" type="date"></div>
+            <div class="field span-3"><label>Status *</label><select id="expenseStatus"><option>Pago</option><option>Pendente</option></select></div>
+            <div class="field span-3"><label>Valor *</label><input id="expenseValue" inputmode="decimal" placeholder="0,00"></div>
+            <div class="field span-6"><label>Descrição *</label><input id="expenseDescription" placeholder="Ex.: Compra de vinil, energia, aluguel..."></div>
+            <div class="field span-3"><label>Categoria *</label><select id="expenseCategory"><option>Estoque</option><option>Operacional</option><option>Marketing</option><option>Impostos</option><option>Taxas</option><option>Equipamentos</option><option>Transporte</option><option>Outros</option></select></div>
+            <div class="field span-3"><label>Pagamento</label><select id="expensePayment"><option>PIX</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Boleto</option><option>Transferência</option><option>InfinitePay</option><option>Outro</option></select></div>
+            <div class="field span-6"><label>Fornecedor / favorecido</label><input id="expenseSupplier" placeholder="Nome do fornecedor ou favorecido"></div>
+            <div class="field span-6"><label>Observações</label><input id="expenseNotes" placeholder="Informações adicionais"></div>
+          </div><div class="form-actions"><button class="btn btn-line" id="cancelExpenseBtn" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Salvar despesa</button></div></form>
+        </article>
+        <article class="panel">
+          <div class="toolbar finance-toolbar"><input class="search-mini" id="expenseSearch" placeholder="Buscar despesa ou fornecedor"><select id="expenseStatusFilter"><option value="">Todos os status</option><option>Pago</option><option>Pendente</option></select><select id="expenseCategoryFilter"><option value="">Todas as categorias</option></select><input type="month" id="expenseMonthFilter"><button class="btn btn-line btn-small" id="clearExpenseFilters">Limpar</button><span class="result-count" id="expenseResultCount">0 despesa(s)</span></div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>Lançamento</th><th>Vencimento</th><th>Descrição</th><th>Categoria</th><th>Favorecido</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody id="expensesBody"></tbody></table></div>
+          <div class="saved-note">Despesas pagas entram como saída realizada; pendentes aparecem em contas a pagar.</div>
+        </article>
+      </section>
+      <section class="view" id="relatorios"><div class="page-head"><div><h2>Relatórios</h2><p>Indicadores de vendas, financeiro, produtos e clientes.</p></div><button class="btn btn-primary">Gerar relatório</button></div><div class="quick"><div class="quick-card"><span class="qicon" style="background:#6a20ff">▥</span><span><b>Vendas</b><small>Período, vendedor e pagamento</small></span></div><div class="quick-card"><span class="qicon" style="background:#18b76a">$</span><span><b>Financeiro</b><small>Entradas, saídas e saldo</small></span></div><div class="quick-card"><span class="qicon" style="background:#118af0">◫</span><span><b>Produtos</b><small>Mais vendidos e estoque</small></span></div><div class="quick-card"><span class="qicon" style="background:#f5ab00">🧾</span><span><b>Orçamentos</b><small>Aprovação e conversão</small></span></div></div></section>
+
+      <section class="view" id="configuracoes">
+        <div class="page-head"><div><h2>Configurações</h2><p>Dados da empresa, usuários e integrações.</p></div><button class="btn btn-primary" id="saveInfinitePayConfigBtn">Salvar alterações</button></div>
+        <div class="settings-tabs"><button>Empresa</button><button>Usuários</button><button class="active">Integrações</button><button>Preferências</button></div>
+        <article class="panel cloud-panel">
+          <div class="integration-card cloud-integration-card">
+            <div class="integration-logo cloud-logo">G<br><small>DB</small></div>
+            <div class="ip-config-main">
+              <div class="panel-head" style="margin-bottom:4px"><h3>Google Sheets + Apps Script</h3><span id="cloudConfigStatus" class="ip-status-pill off">Não conectado</span></div>
+              <p style="margin:0 0 16px;color:var(--muted)">A planilha será o banco de dados e o Google Apps Script será a API do sistema.</p>
+              <div class="form-grid">
+                <div class="field span-9"><label>URL do Web App (Apps Script)</label><input id="cloudApiUrl" placeholder="https://script.google.com/macros/s/SEU_DEPLOYMENT_ID/exec" autocomplete="off"><small class="field-help">Publique o Apps Script como Aplicativo da Web e cole aqui a URL terminada em /exec.</small></div>
+                <div class="field span-3"><label>Banco em nuvem</label><select id="cloudEnabled"><option value="true">Ativo</option><option value="false">Desativado</option></select></div>
+                <div class="field span-12"><div class="ip-security-note"><b>Fonte principal dos dados:</b> Google Sheets<br><span>O navegador mantém apenas uma cópia local para carregamento e contingência. Alterações são sincronizadas com a planilha.</span></div></div>
+              </div>
+              <div class="ip-actions"><button class="btn btn-primary" id="saveGoogleApiBtn" type="button">Salvar e conectar</button><button class="btn btn-line" id="testGoogleApiBtn" type="button">Testar conexão</button><button class="btn btn-soft" id="syncGoogleApiBtn" type="button">Sincronizar agora</button></div>
+              <div id="cloudSyncInfo" class="saved-note cloud-sync-note">Configure a URL do Apps Script para começar a usar a planilha como banco.</div>
+            </div>
+            <div class="ip-config-toggle"><div id="cloudSwitch" class="switch"></div></div>
+          </div>
+        </article>
+        <article class="panel" style="margin-top:18px">
+          <div class="integration-card ip-integration-card">
+            <div class="integration-logo">∞<br>PAY</div>
+            <div class="ip-config-main">
+              <div class="panel-head" style="margin-bottom:4px"><h3>InfinitePay</h3><span id="ipConfigStatus" class="ip-status-pill off">Não configurada</span></div>
+              <p style="margin:0 0 16px;color:var(--muted)">Gere links de checkout vinculados às vendas e confirme pagamentos retornados pela InfinitePay.</p>
+              <div class="form-grid">
+                <div class="field span-6"><label>InfiniteTag / Handle</label><input id="ipHandle" placeholder="Ex.: caioforte" autocomplete="off"></div>
+                <div class="field span-6"><label>Integração</label><select id="ipEnabled"><option value="true">Ativa</option><option value="false">Desativada</option></select></div>
+                <div class="field span-12"><label>URL de retorno após pagamento</label><input id="ipRedirectUrl" placeholder="https://seudominio.com/"><small class="field-help">A InfinitePay retorna order_nsu, transaction_nsu, slug e comprovante nesta URL.</small></div>
+                <div class="field span-12"><label>URL do Webhook (opcional)</label><input id="ipWebhookUrl" placeholder="https://seudominio.com/api/webhooks/infinitepay"><small class="field-help">O webhook exige backend publicado. No protótipo estático, a confirmação funciona pelo retorno do checkout.</small></div>
+                <div class="field span-12"><label>Ambiente atual</label><div class="ip-security-note"><b>Checkout oficial:</b> https://api.checkout.infinitepay.io/links<br><span>Não armazenamos senha, token ou dados de cartão neste projeto.</span></div></div>
+              </div>
+              <div class="ip-actions"><button class="btn btn-line" id="validateInfinitePayBtn">Validar configuração</button><button class="btn btn-soft" id="openInfinitePayDocsBtn">Documentação</button></div>
+            </div>
+            <div class="ip-config-toggle"><div id="ipSwitch" class="switch"></div></div>
+          </div>
+        </article>
+        <article class="panel" style="margin-top:18px">
+          <div class="panel-head"><div><h3>Transações InfinitePay</h3><p class="panel-subtitle">Cobranças geradas pelo sistema e confirmações de pagamento.</p></div><span id="ipTransactionCount" class="result-count">0 transação(ões)</span></div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>Venda</th><th>Data</th><th>Valor</th><th>Método</th><th>Status</th><th>NSU</th><th>Ações</th></tr></thead><tbody id="ipTransactionsBody"></tbody></table></div>
+          <div class="saved-note">O sistema mantém o <b>order_nsu</b> como número da venda. O pagamento só é marcado como pago após uma confirmação válida da InfinitePay.</div>
+        </article>
+      </section>
+    </div>
+    <footer class="footer"><span>MJ Envelopamento — V11.12</span><span style="display:flex;align-items:center;gap:8px">IDEIAS QUE GANHAM VIDA <span class="mini-lines"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span></span></footer>
+  </main>
+</div>
+
+<div class="sale-modal" id="saleModal" aria-hidden="true">
+  <div class="sale-modal-backdrop" data-close-sale-modal></div>
+  <div class="sale-modal-card" role="dialog" aria-modal="true" aria-labelledby="saleModalTitle">
+    <div class="panel-head">
+      <div><h3 id="saleModalTitle">Venda</h3><p class="panel-subtitle" id="saleModalSubtitle"></p></div>
+      <button class="action-btn" type="button" data-close-sale-modal title="Fechar">✕</button>
+    </div>
+    <div id="saleModalContent"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="confirm-modal" id="confirmSaleCancelModal" aria-hidden="true">
+  <div class="confirm-modal-backdrop" data-cancel-sale-dismiss></div>
+  <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmSaleCancelTitle">
+    <div class="confirm-modal-icon warning">!</div>
+    <h3 id="confirmSaleCancelTitle">Cancelar esta venda?</h3>
+    <p id="confirmSaleCancelText">Esta ação devolverá os itens ao estoque e estornará o lançamento financeiro.</p>
+    <div class="confirm-modal-summary" id="confirmSaleCancelSummary"></div>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-line" type="button" data-cancel-sale-dismiss>Voltar</button>
+      <button class="btn btn-danger" type="button" id="confirmSaleCancelBtn">Sim, cancelar venda</button>
+    </div>
+  </div>
+</div>
+<div class="confirm-modal" id="saleCancelSuccessModal" aria-hidden="true">
+  <div class="confirm-modal-backdrop" data-sale-success-dismiss></div>
+  <div class="confirm-modal-card success-card" role="dialog" aria-modal="true" aria-labelledby="saleCancelSuccessTitle">
+    <button class="confirm-modal-close" type="button" data-sale-success-dismiss>✕</button>
+    <div class="confirm-modal-icon success">✓</div>
+    <h3 id="saleCancelSuccessTitle">Venda cancelada com sucesso!</h3>
+    <p id="saleCancelSuccessText"></p>
+    <div class="success-check-list"><span>✓ Itens devolvidos ao estoque.</span><span>✓ Lançamento financeiro estornado.</span></div>
+    <button class="btn btn-primary" type="button" data-sale-success-dismiss>OK, entendi</button>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+(function(){
+  const overlay = document.getElementById('appLoadingOverlay');
+  const title = document.getElementById('appLoadingTitle');
+  const message = document.getElementById('appLoadingMessage');
+  const progress = document.getElementById('appLoadingProgress');
+  const hint = document.getElementById('appLoadingHint');
+  const spinner = document.getElementById('appLoadingSpinner');
+  const icon = document.getElementById('appLoadingIcon');
+  const actions = document.getElementById('appLoadingActions');
+  let mainLoaded = false;
+
+  function setLoader(state, text, percent){
+    if (text) message.textContent = text;
+    if (Number.isFinite(percent)) progress.style.width = Math.max(4, Math.min(100, percent)) + '%';
+    overlay.dataset.state = state || 'loading';
+  }
+  window.MJAppLoader = { set: setLoader };
+
+  function loadMain(){
+    if (mainLoaded) return;
+    mainLoaded = true;
+    setLoader('loading','Preparando o painel...',92);
+    const script = document.createElement('script');
+    script.src = 'js/main-v11-12.js';
+    script.onload = () => {
+      setLoader('ready','Sistema pronto!',100);
+      title.textContent = 'Sistema pronto!';
+      hint.textContent = 'Dados sincronizados com sucesso.';
+      setTimeout(() => { overlay.classList.add('is-hidden'); overlay.setAttribute('aria-busy','false'); }, 320);
+    };
+    script.onerror = () => showError(new Error('Não foi possível carregar os arquivos do sistema.'));
+    document.body.appendChild(script);
+  }
+
+  function showError(err){
+    overlay.dataset.state = 'error';
+    spinner.hidden = true;
+    icon.hidden = false;
+    icon.textContent = '!';
+    title.textContent = 'Não foi possível carregar os dados';
+    message.textContent = err?.message || 'Falha de comunicação com o Google Sheets.';
+    hint.textContent = 'Verifique sua conexão e tente novamente. Você também pode abrir usando o último cache local.';
+    actions.hidden = false;
+    progress.style.width = '100%';
+  }
+
+  async function start(){
+    spinner.hidden = false; icon.hidden = true; actions.hidden = true;
+    title.textContent = 'Carregando o sistema...';
+    hint.textContent = 'Aguarde alguns instantes. Os dados estão sendo sincronizados.';
+    setLoader('loading','Conectando ao Google Sheets...',12);
+    try {
+      const result = await window.MJCloud.init();
+      if (result?.connected === false && result?.error) throw result.error;
+      setLoader('loading','Dados recebidos. Montando o painel...',80);
+      loadMain();
+    } catch (err) {
+      console.error('[MJ] Falha na carga inicial:', err);
+      showError(err);
+    }
+  }
+
+  document.getElementById('retryAppLoadBtn')?.addEventListener('click', start);
+  document.getElementById('useCacheAppLoadBtn')?.addEventListener('click', () => {
+    spinner.hidden = false; icon.hidden = true; actions.hidden = true;
+    title.textContent = 'Abrindo dados locais...';
+    hint.textContent = 'As alterações serão sincronizadas quando a conexão voltar.';
+    setLoader('loading','Carregando o último cache salvo...',60);
+    loadMain();
+  });
+  start();
+})();
+</script>
+</body>
+</html>
