@@ -25,9 +25,13 @@ function route_(body) {
       case 'salvarOrcamento': return json_({ ok: true, data: salvarOrcamento_(body.orcamento || {}) });
       case 'excluirOrcamento': excluirOrcamento_(String(body.id || '')); return json_({ ok: true });
       case 'converterOrcamento': return json_({ ok: true, data: converterOrcamento_(String(body.id || ''), body.saleId || '') });
+      case 'enviarOrcamentoEmail': return json_({ ok: true, data: enviarOrcamentoEmail_(String(body.id || '')) });
 
       case 'finalizarVenda': return json_({ ok: true, data: finalizarVenda_(body.venda || {}) });
       case 'cancelarVenda': return json_({ ok: true, data: cancelarVenda_(String(body.id || '')) });
+
+      case 'finalizarCompra': return json_({ ok: true, data: finalizarCompra_(body.compra || {}) });
+      case 'cancelarCompra': return json_({ ok: true, data: cancelarCompra_(String(body.id || '')) });
 
       case 'salvarFinanceiro': return json_({ ok: true, data: salvarFinanceiro_(body.lancamento || {}) });
       case 'marcarFinanceiroPago': return json_({ ok: true, data: marcarFinanceiroPago_(String(body.id || '')) });

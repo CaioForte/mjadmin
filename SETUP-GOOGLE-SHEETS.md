@@ -1,67 +1,26 @@
-# Configuração — MJ Admin V11
+# Google Sheets / Apps Script — V11.17
 
-## 1. Atualizar o projeto Apps Script existente
+## Arquivos do Apps Script
 
-No mesmo projeto que já está conectado à planilha MJ, crie os seguintes arquivos de script:
+Mantenha os módulos existentes e atualize/adicone:
 
-```text
-Code.gs
-Config.gs
-Database.gs
-Utils.gs
-Bootstrap.gs
-Produtos.gs
-Clientes.gs
-Orcamentos.gs
-Vendas.gs
-Financeiro.gs
-Despesas.gs
-InfinitePay.gs
-```
+- `Code.gs` — atualizado com as ações `finalizarCompra` e `cancelarCompra`.
+- `Config.gs` — V11.17 e novas abas/colunas.
+- `Bootstrap.gs` — sincroniza Fornecedores e Compras.
+- `Compras.gs` — nova rotina atômica de entrada/cancelamento de estoque e financeiro.
+- `Fornecedores.gs` — módulo de fornecedores.
 
-Copie o conteúdo do arquivo correspondente da pasta `apps-script/`.
+## Depois de colar os arquivos
 
-> O `Code.gs` agora deve ficar pequeno. Não copie o conteúdo de Financeiro, Vendas etc. para dentro dele.
+1. Salve o projeto do Apps Script.
+2. Vá em **Implantar > Gerenciar implantações**.
+3. Edite a implantação atual.
+4. Selecione **Nova versão**.
+5. Clique em **Implantar**.
+6. A URL `/exec` pode permanecer a mesma.
 
-## 2. Executar o setup
+Não é obrigatório executar `setupDatabase()` manualmente. A API executa a preparação das abas automaticamente no primeiro acesso. Se preferir, pode executar `setupDatabase()` uma vez para conferir imediatamente as novas abas `Compras` e `ComprasItens`.
 
-Execute manualmente:
+## Fluxo da compra
 
-```javascript
-setupDatabase()
-```
-
-As abas atuais são preservadas. Se a V11 precisar de uma nova coluna, o cabeçalho é ajustado.
-
-## 3. Publicar a nova versão
-
-Use **Implantar → Gerenciar implantações → Editar → Nova versão → Implantar**.
-
-Configuração:
-
-- Executar como: **Eu**
-- Quem pode acessar: **Qualquer pessoa**
-
-## 4. Teste
-
-Abra a URL `/exec` em uma janela anônima. Deve retornar algo parecido com:
-
-```json
-{"ok":true,"version":"11.0.0","spreadsheetName":"MJ"}
-```
-
-Depois abra o painel e use **Configurações → Testar conexão**.
-
-## Organização futura
-
-Quando criarmos novos módulos, a regra será a mesma. Exemplo:
-
-- Relatórios → `Relatorios.gs`
-- Usuários/Login → `Usuarios.gs`
-- Auditoria → `Auditoria.gs`
-
-Assim o `Code.gs` permanece apenas como porta de entrada da API.
-
-
-## Atualização V11.1
-Após copiar os novos arquivos do Apps Script, execute `setupDatabase()` uma vez e publique uma nova versão da implantação. A URL `/exec` pode permanecer a mesma.
+Ao registrar uma compra, o backend grava a compra, os itens, movimentações de estoque, atualiza os produtos e, quando selecionado, cria uma saída no Financeiro. O cancelamento faz o processo inverso sob `LockService`, reduzindo risco de inconsistência.

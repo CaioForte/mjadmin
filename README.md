@@ -1,26 +1,27 @@
-# MJ Admin V11.12 — Sem dados demonstrativos + correção de Vendas
+# MJ Envelopamento — Painel Administrativo V11.17
 
-Esta versão usa somente os dados reais carregados do Google Sheets ou o cache local quando a API estiver indisponível.
+Versão com **Fornecedores + Compras / Entrada de Estoque** integrados ao Google Sheets.
 
-## Correções principais
+## Novidades da V11.17
 
-- Removidos dados demonstrativos de Produtos, Clientes, Orçamentos e Dashboard.
-- Removidos gráfico, percentuais, notificações e indicadores fictícios do Dashboard.
-- O gráfico de 7 dias e as formas de pagamento agora são calculados com vendas reais.
-- Corrigida a inicialização que interrompia o JavaScript antes de carregar Clientes/Vendas.
-- O Google Sheets é carregado antes do arquivo principal do sistema.
-- Durante a carga inicial, o cache vazio não é enviado para a planilha.
-- A listagem de Vendas ficou tolerante a registros incompletos, evitando que uma linha inválida quebre toda a tela.
-- Botões Ver, Imprimir e Cancelar permanecem vinculados por delegação de eventos.
+- Cadastro completo de fornecedores, sem dados de demonstração.
+- Busca, edição, status Ativo/Inativo e proteção contra exclusão de fornecedor que já possui compras.
+- Nova rotina **Compras / Entrada de estoque**.
+- Compra com vários produtos, quantidade e custo unitário.
+- Desconto em R$ e frete em R$.
+- Opção para atualizar automaticamente o custo cadastrado do produto.
+- Opção para gerar ou não lançamento financeiro.
+- Status financeiro Pago/Pendente e vencimento.
+- Entrada automática no estoque ao registrar a compra.
+- Histórico de compras com visualizar, imprimir e cancelar.
+- Cancelamento retira os itens do estoque e estorna o lançamento financeiro.
+- O cancelamento é bloqueado se o estoque atual não for suficiente para estornar os itens daquela compra.
+- Produtos e Despesas passam a sugerir os fornecedores cadastrados.
 
-## Banco
+## Banco de dados
 
-Não há alteração de estrutura nas abas do Google Sheets nesta versão. Não é necessário executar `setupDatabase()` nem atualizar os arquivos `.gs` se a V11 modular já estiver implantada.
+A V11.17 adiciona as abas **Compras** e **ComprasItens**. A aba **Fornecedores** já existente recebe campos adicionais. O Apps Script executa `setupDatabase_()` automaticamente quando a API é chamada, portanto as novas abas serão criadas após a implantação atualizada.
 
+## Atualização
 
-## V11.12 — Tela de carregamento
-
-- Overlay bloqueia a interface durante a carga inicial do Google Sheets.
-- Exibe progresso e mensagens reais de conexão/sincronização.
-- Em falha, oferece **Tentar novamente** ou **Usar dados locais**.
-- O menu só é liberado depois que o JavaScript principal termina de carregar.
+Atualize os arquivos do front-end e, no Apps Script, substitua **Code.gs**, **Config.gs** e **Bootstrap.gs** e adicione **Compras.gs** e **Fornecedores.gs**. Depois publique uma **nova versão da implantação Web App**, mantendo a mesma URL `/exec`.

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MJ Envelopamento — Painel Administrativo V11.11</title>
-<link rel="stylesheet" href="css/styles-v11-12.css" />
+<title>MJ Envelopamento — Painel Administrativo V11.17</title>
+<link rel="stylesheet" href="css/styles.css?v=11.17" />
 </head>
 <body>
 <div id="appLoadingOverlay" class="app-loading-overlay" aria-live="polite" aria-busy="true">
@@ -45,6 +45,7 @@
       <button data-view="produtos"><span class="icon">◫</span><span>Produtos</span></button>
       <button data-view="clientes"><span class="icon">👥</span><span>Clientes</span></button>
       <button data-view="fornecedores"><span class="icon">🚚</span><span>Fornecedores</span></button>
+      <button data-view="compras"><span class="icon">📦</span><span>Compras</span></button>
       <button data-view="estoque"><span class="icon">▦</span><span>Estoque</span></button>
       <button data-view="financeiro"><span class="icon">$</span><span>Financeiro</span></button>
       <button data-view="despesas"><span class="icon">▣</span><span>Despesas</span></button>
@@ -170,7 +171,7 @@
             <div class="quote-notes"><small>Os valores são calculados automaticamente. O desconto pode ser informado em reais.</small></div>
             <div class="quote-totals">
               <div class="summary-row"><span>Subtotal</span><b id="quoteSubtotalLabel">R$ 0,00</b></div>
-              <div class="quote-discount-row"><label>Desconto</label><div class="money-input"><span>R$</span><input id="quoteDiscount" inputmode="decimal" value="0,00"></div></div>
+              <div class="quote-discount-row"><label>Desconto (R$)</label><div class="money-input"><span>R$</span><input id="quoteDiscount" inputmode="decimal" value="0,00"></div></div>
               <div class="summary-row total"><span>Total</span><span id="quoteTotalLabel">R$ 0,00</span></div>
             </div>
           </div>
@@ -228,7 +229,7 @@
               <div class="field span-3"><label>Preço de custo</label><input id="productCost" inputmode="decimal" placeholder="0,00"></div>
               <div class="field span-3"><label>Preço de venda</label><input id="productPrice" inputmode="decimal" placeholder="Deixe em branco para preço variável"><small class="field-hint">Opcional. Em serviços/mão de obra, o valor pode ser informado no orçamento ou na venda.</small></div>
               <div class="field span-3"><label>Tipo de preço</label><label class="variable-price-toggle"><input id="productVariablePrice" type="checkbox"><span><b>Preço variável</b><small>Solicitar valor manual na venda/orçamento</small></span></label></div>
-              <div class="field span-3"><label>Fornecedor</label><input id="productSupplier" placeholder="Fornecedor opcional"></div>
+              <div class="field span-3"><label>Fornecedor</label><input id="productSupplier" list="supplierNameList" placeholder="Fornecedor opcional"><datalist id="supplierNameList"></datalist></div>
               <div class="field span-3"><label>Estoque atual</label><input id="productStock" type="number" min="0" step="0.01" value="0"></div>
               <div class="field span-3"><label>Estoque mínimo</label><input id="productMinStock" type="number" min="0" step="0.01" value="0"></div>
               <div class="field span-3"><label>Status</label><select id="productStatus"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div>
@@ -271,7 +272,7 @@
             <input type="hidden" id="clientEditId">
             <div class="form-grid">
               <div class="field span-3"><label>Tipo de pessoa *</label><select id="clientType"><option value="PF">Pessoa Física</option><option value="PJ">Pessoa Jurídica</option></select></div>
-              <div class="field span-3"><label id="clientDocLabel">CPF *</label><input id="clientDocument" inputmode="numeric" placeholder="000.000.000-00" maxlength="18"></div>
+              <div class="field span-3"><label id="clientDocLabel">CPF</label><input id="clientDocument" inputmode="numeric" placeholder="000.000.000-00" maxlength="18"></div>
               <div class="field span-6"><label id="clientNameLabel">Nome completo *</label><input id="clientName" placeholder="Nome do cliente"></div>
               <div class="field span-6 pj-only" style="display:none"><label>Nome fantasia</label><input id="clientTradeName" placeholder="Nome fantasia da empresa"></div>
               <div class="field span-3"><label>Telefone</label><input id="clientPhone" inputmode="tel" placeholder="(85) 99999-9999"></div>
@@ -304,7 +305,91 @@
           </div>
         </div>
       </section>
-      <section class="view" id="fornecedores"><div class="page-head"><div><h2>Fornecedores</h2><p>Contatos e fornecedores dos materiais utilizados.</p></div><button class="btn btn-primary">＋ Novo fornecedor</button></div><article class="panel"><div class="empty-note">Área pronta para o cadastro de fornecedores.</div></article></section>
+      <section class="view" id="fornecedores">
+        <div class="page-head"><div><h2>Fornecedores</h2><p>Cadastre e mantenha os fornecedores de materiais e serviços.</p></div><button class="btn btn-primary" id="newSupplierBtn">＋ Novo fornecedor</button></div>
+        <div class="cards supplier-stats">
+          <article class="metric"><label>Fornecedores cadastrados</label><strong id="supplierCount">0</strong><div class="trend">Base total</div></article>
+          <article class="metric"><label>Fornecedores ativos</label><strong id="supplierActiveCount">0</strong><div class="trend">Disponíveis para compras</div></article>
+          <article class="metric"><label>Compras no mês</label><strong id="supplierPurchaseMonthCount">0</strong><div class="trend">Compras registradas</div></article>
+          <article class="metric"><label>Comprado no mês</label><strong id="supplierPurchaseMonthValue">R$ 0,00</strong><div class="trend">Total das compras ativas</div></article>
+        </div>
+        <article class="panel form-panel" id="supplierFormPanel" hidden style="margin-bottom:16px">
+          <div class="panel-head"><div><h3 id="supplierFormTitle">Novo fornecedor</h3><p class="panel-subtitle">Dados comerciais e de contato.</p></div><button class="action-btn" id="closeSupplierBtn" type="button">✕</button></div>
+          <form id="supplierForm" autocomplete="off"><input type="hidden" id="supplierEditId"><div class="form-grid">
+            <div class="field span-6"><label>Nome / Razão social *</label><input id="supplierName" required placeholder="Nome do fornecedor"></div>
+            <div class="field span-3"><label>CPF / CNPJ</label><input id="supplierDocument" placeholder="Documento opcional"></div>
+            <div class="field span-3"><label>Status</label><select id="supplierStatus"><option>Ativo</option><option>Inativo</option></select></div>
+            <div class="field span-3"><label>Telefone</label><input id="supplierPhone" inputmode="tel" placeholder="(85) 99999-9999"></div>
+            <div class="field span-3"><label>WhatsApp</label><input id="supplierWhatsapp" inputmode="tel" placeholder="(85) 99999-9999"></div>
+            <div class="field span-3"><label>E-mail</label><input id="supplierEmail" type="email" placeholder="contato@fornecedor.com"></div>
+            <div class="field span-3"><label>Contato responsável</label><input id="supplierContact" placeholder="Nome do contato"></div>
+            <div class="field span-12"><label>Observações</label><textarea id="supplierNotes" placeholder="Condições comerciais, prazo, materiais fornecidos..."></textarea></div>
+          </div><div class="form-actions"><button class="btn btn-line" id="cancelSupplierBtn" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Salvar fornecedor</button></div></form>
+        </article>
+        <article class="panel">
+          <div class="toolbar"><input class="search-mini" id="supplierSearch" placeholder="Buscar nome, documento, telefone ou e-mail"><select id="supplierStatusFilter"><option value="">Todos os status</option><option>Ativo</option><option>Inativo</option></select><span class="result-count" id="supplierResultCount">0 fornecedor(es)</span></div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>Fornecedor</th><th>Documento</th><th>Telefone</th><th>E-mail</th><th>Status</th><th>Ações</th></tr></thead><tbody id="suppliersBody"></tbody></table></div>
+          <div class="saved-note">Fornecedores sincronizados com o Google Sheets.</div>
+        </article>
+      </section>
+
+      <section class="view" id="compras">
+        <div class="page-head"><div><h2>Compras / Entrada de estoque</h2><p>Registre compras, atualize o estoque e gere a saída financeira automaticamente.</p></div><button class="btn btn-primary" id="newPurchaseBtn">＋ Nova compra</button></div>
+        <div class="cards purchase-stats">
+          <article class="metric"><label>Compras no mês</label><strong id="purchaseMonthCount">0</strong><div class="trend">Registros ativos</div></article>
+          <article class="metric"><label>Total comprado no mês</label><strong id="purchaseMonthValue">R$ 0,00</strong><div class="trend">Inclui frete e desconto</div></article>
+          <article class="metric"><label>Contas pendentes</label><strong id="purchasePendingValue">R$ 0,00</strong><div class="trend red">Compras a pagar</div></article>
+          <article class="metric"><label>Compras cadastradas</label><strong id="purchaseTotalCount">0</strong><div class="trend">Histórico completo</div></article>
+        </div>
+
+        <article class="panel purchase-form-panel" id="purchaseFormPanel" hidden style="margin-bottom:16px">
+          <div class="panel-head"><div><h3>Registrar compra</h3><p class="panel-subtitle">A confirmação adiciona os itens ao estoque. O financeiro é opcional.</p></div><button class="action-btn" id="closePurchaseBtn" type="button">✕</button></div>
+          <div class="form-grid">
+            <div class="field span-3"><label>Nº da compra</label><input id="purchaseNumber" readonly></div>
+            <div class="field span-3"><label>Data *</label><input id="purchaseDate" type="date"></div>
+            <div class="field span-6"><label>Fornecedor *</label><select id="purchaseSupplier"><option value="">Selecione um fornecedor</option></select></div>
+            <div class="field span-3"><label>Vencimento</label><input id="purchaseDueDate" type="date"></div>
+            <div class="field span-3"><label>Forma de pagamento</label><select id="purchasePayment"><option>PIX</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>Boleto</option><option>Transferência</option><option>Outro</option></select></div>
+            <div class="field span-3"><label>Status financeiro</label><select id="purchaseFinanceStatus"><option>Pago</option><option>Pendente</option></select></div>
+            <div class="field span-3"><label>Integração financeira</label><label class="variable-price-toggle"><input id="purchaseGenerateFinance" type="checkbox" checked><span><b>Gerar financeiro</b><small>Criar saída automaticamente</small></span></label></div>
+            <div class="field span-3"><label>Atualização de custo</label><label class="variable-price-toggle"><input id="purchaseUpdateCost" type="checkbox" checked><span><b>Atualizar custo</b><small>Usar o custo desta compra no produto</small></span></label></div>
+            <div class="field span-9"><label>Observações</label><input id="purchaseNotes" placeholder="Nota fiscal, pedido, observações..."></div>
+          </div>
+          <div class="purchase-item-box">
+            <div class="form-grid purchase-add-grid">
+              <div class="field span-6"><label>Produto *</label><select id="purchaseProductSelect"><option value="">Selecione um produto</option></select></div>
+              <div class="field span-2"><label>Quantidade *</label><input id="purchaseItemQty" type="number" min="0.01" step="0.01" value="1"></div>
+              <div class="field span-2"><label>Custo unitário *</label><input id="purchaseItemCost" inputmode="decimal" placeholder="0,00"></div>
+              <div class="field span-2 purchase-add-button"><label>&nbsp;</label><button class="btn btn-primary" id="addPurchaseItemBtn" type="button">＋ Adicionar</button></div>
+            </div>
+            <div class="table-scroll"><table class="data-table"><thead><tr><th>Produto</th><th>Qtd.</th><th>Custo unit.</th><th>Total</th><th></th></tr></thead><tbody id="purchaseItemsBody"></tbody></table></div>
+          </div>
+          <div class="purchase-bottom">
+            <div></div>
+            <div class="quote-totals purchase-totals">
+              <div class="summary-row"><span>Subtotal</span><b id="purchaseSubtotal">R$ 0,00</b></div>
+              <div class="summary-row editable-total"><span>Desconto (R$)</span><input id="purchaseDiscount" inputmode="decimal" value="0,00"></div>
+              <div class="summary-row editable-total"><span>Frete (R$)</span><input id="purchaseFreight" inputmode="decimal" value="0,00"></div>
+              <div class="summary-row total"><span>Total</span><span id="purchaseTotal">R$ 0,00</span></div>
+            </div>
+          </div>
+          <div class="form-actions"><button class="btn btn-line" id="cancelPurchaseBtn" type="button">Cancelar</button><button class="btn btn-primary" id="savePurchaseBtn" type="button">✓ Registrar compra e entrada</button></div>
+        </article>
+
+        <article class="panel">
+          <div class="toolbar finance-toolbar"><input class="search-mini" id="purchaseSearch" placeholder="Buscar número ou fornecedor"><select id="purchaseStatusFilter"><option value="">Ativas e canceladas</option><option>Ativa</option><option>Cancelada</option></select><select id="purchaseFinanceFilter"><option value="">Todos os financeiros</option><option>Pago</option><option>Pendente</option><option>Sem financeiro</option></select><input type="month" id="purchaseMonthFilter"><button class="btn btn-line btn-small" id="clearPurchaseFilters">Limpar</button><span class="result-count" id="purchaseResultCount">0 compra(s)</span></div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>Nº</th><th>Data</th><th>Fornecedor</th><th>Total</th><th>Pagamento</th><th>Financeiro</th><th>Status</th><th>Ações</th></tr></thead><tbody id="purchasesBody"></tbody></table></div>
+          <div class="saved-note">Ao cancelar uma compra, os itens são retirados do estoque e o lançamento financeiro é estornado.</div>
+        </article>
+      </section>
+
+      <div class="quote-modal" id="purchaseModal" aria-hidden="true">
+        <div class="quote-modal-backdrop" data-close-purchase-modal></div>
+        <div class="quote-modal-card">
+          <div class="panel-head"><div><h3 id="purchaseModalTitle">Compra</h3><p class="panel-subtitle" id="purchaseModalSubtitle"></p></div><button class="btn btn-line" type="button" data-close-purchase-modal>Fechar</button></div>
+          <div id="purchaseModalContent"></div>
+        </div>
+      </div>
       <section class="view" id="estoque"><div class="page-head"><div><h2>Estoque</h2><p>Acompanhe a posição atual e os itens abaixo do estoque mínimo.</p></div><button class="btn btn-primary" onclick="go('produtos'); openProductForm();">＋ Cadastrar produto</button></div><div class="cards stock-stats" style="grid-template-columns:repeat(3,1fr)"><article class="metric"><label>Quantidade em estoque</label><strong id="stockTotalQty">0</strong></article><article class="metric"><label>Estoque baixo</label><strong id="stockLowCount">0</strong></article><article class="metric"><label>Valor estimado</label><strong id="stockTotalValue">R$ 0,00</strong></article></div><article class="panel"><div class="toolbar"><input class="search-mini" id="stockSearch" placeholder="Buscar produto no estoque"></div><table class="data-table"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Atual</th><th>Mínimo</th><th>Situação</th></tr></thead><tbody id="stockBody"></tbody></table></article></section>
       <section class="view" id="financeiro">
         <div class="page-head"><div><h2>Financeiro</h2><p>Entradas, saídas, contas pendentes e fluxo de caixa.</p></div><button class="btn btn-primary" id="newFinancialBtn">＋ Novo lançamento</button></div>
@@ -368,7 +453,7 @@
             <div class="field span-6"><label>Descrição *</label><input id="expenseDescription" placeholder="Ex.: Compra de vinil, energia, aluguel..."></div>
             <div class="field span-3"><label>Categoria *</label><select id="expenseCategory"><option>Estoque</option><option>Operacional</option><option>Marketing</option><option>Impostos</option><option>Taxas</option><option>Equipamentos</option><option>Transporte</option><option>Outros</option></select></div>
             <div class="field span-3"><label>Pagamento</label><select id="expensePayment"><option>PIX</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Boleto</option><option>Transferência</option><option>InfinitePay</option><option>Outro</option></select></div>
-            <div class="field span-6"><label>Fornecedor / favorecido</label><input id="expenseSupplier" placeholder="Nome do fornecedor ou favorecido"></div>
+            <div class="field span-6"><label>Fornecedor / favorecido</label><input id="expenseSupplier" list="supplierExpenseList" placeholder="Nome do fornecedor ou favorecido"><datalist id="supplierExpenseList"></datalist></div>
             <div class="field span-6"><label>Observações</label><input id="expenseNotes" placeholder="Informações adicionais"></div>
           </div><div class="form-actions"><button class="btn btn-line" id="cancelExpenseBtn" type="button">Cancelar</button><button class="btn btn-primary" type="submit">Salvar despesa</button></div></form>
         </article>
@@ -425,7 +510,7 @@
         </article>
       </section>
     </div>
-    <footer class="footer"><span>MJ Envelopamento — V11.12</span><span style="display:flex;align-items:center;gap:8px">IDEIAS QUE GANHAM VIDA <span class="mini-lines"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span></span></footer>
+    <footer class="footer"><span>MJ Envelopamento — V11.17</span><span style="display:flex;align-items:center;gap:8px">IDEIAS QUE GANHAM VIDA <span class="mini-lines"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span></span></footer>
   </main>
 </div>
 
@@ -454,6 +539,20 @@
     </div>
   </div>
 </div>
+<div class="confirm-modal" id="confirmPurchaseCancelModal" aria-hidden="true">
+  <div class="confirm-modal-backdrop" data-cancel-purchase-dismiss></div>
+  <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmPurchaseCancelTitle">
+    <div class="confirm-modal-icon warning">!</div>
+    <h3 id="confirmPurchaseCancelTitle">Cancelar esta compra?</h3>
+    <p>Os itens serão retirados do estoque e o lançamento financeiro vinculado será estornado.</p>
+    <div class="confirm-modal-summary" id="confirmPurchaseCancelSummary"></div>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-line" type="button" data-cancel-purchase-dismiss>Voltar</button>
+      <button class="btn btn-danger" type="button" id="confirmPurchaseCancelBtn">Sim, cancelar compra</button>
+    </div>
+  </div>
+</div>
+
 <div class="confirm-modal" id="saleCancelSuccessModal" aria-hidden="true">
   <div class="confirm-modal-backdrop" data-sale-success-dismiss></div>
   <div class="confirm-modal-card success-card" role="dialog" aria-modal="true" aria-labelledby="saleCancelSuccessTitle">
@@ -491,7 +590,7 @@
     mainLoaded = true;
     setLoader('loading','Preparando o painel...',92);
     const script = document.createElement('script');
-    script.src = 'js/main-v11-12.js';
+    script.src = 'js/main.js?v=11.17';
     script.onload = () => {
       setLoader('ready','Sistema pronto!',100);
       title.textContent = 'Sistema pronto!';
