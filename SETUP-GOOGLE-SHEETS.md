@@ -1,26 +1,51 @@
-# Google Sheets / Apps Script — V11.17
+# Configuração do Google Sheets — V11.23
 
-## Arquivos do Apps Script
+## 1. Atualize o Apps Script
+Substitua os arquivos:
+- `Code.gs`
+- `Config.gs`
 
-Mantenha os módulos existentes e atualize/adicone:
+Adicione o novo arquivo:
+- `Usuarios.gs`
 
-- `Code.gs` — atualizado com as ações `finalizarCompra` e `cancelarCompra`.
-- `Config.gs` — V11.17 e novas abas/colunas.
-- `Bootstrap.gs` — sincroniza Fornecedores e Compras.
-- `Compras.gs` — nova rotina atômica de entrada/cancelamento de estoque e financeiro.
-- `Fornecedores.gs` — módulo de fornecedores.
+## 2. Atualize a estrutura da planilha
+Execute:
 
-## Depois de colar os arquivos
+```javascript
+setupDatabase()
+```
 
-1. Salve o projeto do Apps Script.
-2. Vá em **Implantar > Gerenciar implantações**.
-3. Edite a implantação atual.
-4. Selecione **Nova versão**.
-5. Clique em **Implantar**.
-6. A URL `/exec` pode permanecer a mesma.
+A aba `Usuarios` passa a armazenar também hash da senha, salt, permissões e último acesso.
 
-Não é obrigatório executar `setupDatabase()` manualmente. A API executa a preparação das abas automaticamente no primeiro acesso. Se preferir, pode executar `setupDatabase()` uma vez para conferir imediatamente as novas abas `Compras` e `ComprasItens`.
+## 3. Crie o primeiro administrador
+Execute:
 
-## Fluxo da compra
+```javascript
+configurarAdministradorInicial()
+```
 
-Ao registrar uma compra, o backend grava a compra, os itens, movimentações de estoque, atualiza os produtos e, quando selecionado, cria uma saída no Financeiro. O cancelamento faz o processo inverso sob `LockService`, reduzindo risco de inconsistência.
+O Apps Script exibirá três perguntas: nome, e-mail e senha.
+A senha deve ter pelo menos 6 caracteres.
+
+## 4. Publique uma nova versão
+No Apps Script:
+**Implantar → Gerenciar implantações → Editar → Nova versão → Implantar**
+
+A URL `/exec` pode continuar a mesma.
+
+## 5. Validação
+Ao abrir:
+
+`.../exec?action=ping`
+
+o retorno deve conter:
+
+```json
+"version":"11.23.0"
+```
+
+Depois abra o `index.html`. A tela de login deve aparecer antes da sincronização dos dados.
+
+
+## V11.25 - carregamento otimizado
+Substitua também `Bootstrap.gs`, `Code.gs` e `Config.gs` e publique uma nova versão do Web App. Não há novas colunas nem abas, portanto não é necessário executar `setupDatabase()` novamente. Após o deploy, `?action=ping` deve retornar `11.25.0`.

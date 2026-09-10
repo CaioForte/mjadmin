@@ -27,7 +27,9 @@ function finalizarVenda_(venda){
 
     const financial=readObjects_('Financeiro');
     if(!financial.some(f=>f.source==='Venda' && String(f.sourceId)===String(venda.id))){
-      financial.unshift({id:uid_('ft'),type:'Entrada',source:'Venda',sourceId:venda.id,description:'Venda '+(venda.num||''),category:'Vendas',date:venda.date||todayIso_(),dueDate:venda.date||todayIso_(),value:num_(venda.total),payment:venda.payment||'Outro',status:venda.status==='Pago'?'Pago':'Pendente',notes:venda.payment==='InfinitePay'?'Aguardando confirmação da InfinitePay.':'Lançamento gerado automaticamente pela venda.',createdAt:nowIso_(),paidAt:venda.status==='Pago'?todayIso_():''});
+      const count=venda.payment==='InfinitePay'?1:Math.max(1,Math.floor(num_(venda.installments)||1));
+      const base={type:'Entrada',source:'Venda',sourceId:venda.id,description:'Venda '+(venda.num||''),category:'Vendas',date:venda.date||todayIso_(),dueDate:venda.firstDueDate||venda.date||todayIso_(),value:num_(venda.total),payment:venda.payment||'Outro',status:venda.status==='Pago'?'Pago':'Pendente',notes:venda.payment==='InfinitePay'?'Aguardando confirmação da InfinitePay.':'Lançamento gerado automaticamente pela venda.',createdAt:nowIso_()};
+      const parcelas=criarParcelasFinanceiras_(base,count);parcelas.reverse().forEach(function(ft){financial.unshift(ft);});
       writeObjects_('Financeiro',financial);
     }
 

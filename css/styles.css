@@ -515,3 +515,101 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 #purchaseModal .quote-modal-card{max-width:980px}.purchase-form-panel .variable-price-toggle{min-height:47px}
 @media(max-width:1100px){.supplier-stats,.purchase-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.purchase-bottom{grid-template-columns:1fr}}
 @media(max-width:620px){.supplier-stats,.purchase-stats{grid-template-columns:1fr}.purchase-item-box{padding:12px}.purchase-add-button .btn{width:100%}.editable-total input{width:115px}}
+
+/* =====================================================
+   V11.18 - Contas a pagar/receber + parcelamento
+   ===================================================== */
+.sale-finance-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.sale-installment-note{margin-top:10px;font-size:12px}
+.finance-stats{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.finance-due-date{display:block;font-size:11px;color:var(--muted,#81778f);margin-top:3px}
+.finance-parcel-badge{display:inline-flex;margin-top:4px;padding:2px 7px;border-radius:999px;background:#f1ebff;color:#6a20ff;font-size:10px;font-weight:800}
+.status.overdue{background:#fff0f1;color:#d82245}
+@media(max-width:620px){.sale-finance-grid{grid-template-columns:1fr}}
+
+
+/* V11.19 - comprovantes / anexos */
+.receipt-upload-box{margin-top:14px;padding:14px;border:1px dashed #d7c9ff;border-radius:14px;background:#fbf9ff;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.receipt-upload-box>div{display:flex;flex-direction:column;gap:2px;margin-right:auto;min-width:180px}
+.receipt-upload-box b{font-size:13px;color:#34235d}.receipt-upload-box small{font-size:11px;color:#81779a}
+.receipt-file-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.receipt-file-button{cursor:pointer}.receipt-file-name{font-size:12px;color:#655b7e;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.purchase-receipt-box{margin:16px 0 4px}
+.receipt-detail-card{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-top:14px;border:1px solid #e3d9ff;border-radius:14px;background:#faf8ff}
+.receipt-detail-card>span{font-size:22px}.receipt-detail-card>div{display:flex;flex-direction:column;min-width:0;flex:1}.receipt-detail-card small{font-size:11px;color:#82799a}.receipt-detail-card b{font-size:13px;color:#35265a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:640px){.receipt-upload-box{align-items:flex-start}.receipt-file-name{width:100%}.receipt-detail-card{flex-wrap:wrap}.receipt-detail-card .btn{width:100%}}
+
+
+/* V11.20 - overlay de finalização de venda/compra */
+.process-overlay{position:fixed;inset:0;z-index:100000;background:rgba(29,18,45,.58);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;pointer-events:none;transition:.18s ease}
+.process-overlay.show{opacity:1;visibility:visible;pointer-events:all}
+.process-card{width:min(440px,100%);background:#fff;border-radius:24px;padding:34px 28px;text-align:center;box-shadow:0 24px 70px rgba(33,16,58,.3)}
+.process-spinner{width:52px;height:52px;margin:0 auto 20px;border:5px solid #eee8f7;border-top-color:#7526df;border-radius:50%;animation:processSpin .8s linear infinite}
+.process-card h2{margin:0 0 9px;color:#30233f;font-size:23px}.process-card p{margin:0 0 14px;color:#6f6680;line-height:1.45}.process-card small{display:block;color:#9a91a7;line-height:1.45}
+body.process-busy{cursor:wait}
+@keyframes processSpin{to{transform:rotate(360deg)}}
+
+
+/* V11.21 - visualização privada de comprovantes */
+.receipt-viewer-modal{position:fixed;inset:0;background:rgba(24,16,38,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:24px;z-index:99999}
+.receipt-viewer-modal.show{display:flex}
+.receipt-viewer-box{width:min(980px,96vw);height:min(780px,92vh);background:var(--surface,#fff);border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.3);display:flex;flex-direction:column;overflow:hidden}
+.receipt-viewer-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--border,#e8e4ee)}
+.receipt-viewer-head>div{display:flex;flex-direction:column;min-width:0}.receipt-viewer-head small{font-size:10px;letter-spacing:.12em;color:var(--muted,#786f83)}.receipt-viewer-head b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.receipt-viewer-close{border:0;background:transparent;font-size:30px;line-height:1;cursor:pointer;color:var(--muted,#786f83);padding:2px 8px}
+.receipt-viewer-content{flex:1;min-height:0;background:#f5f3f7;display:flex;align-items:center;justify-content:center;overflow:auto}
+.receipt-viewer-frame{width:100%;height:100%;border:0;background:#fff}.receipt-viewer-image{max-width:100%;max-height:100%;object-fit:contain;padding:18px}
+.receipt-viewer-loading,.receipt-viewer-error{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:28px}.receipt-viewer-loading small,.receipt-viewer-error small{color:var(--muted,#786f83)}
+.receipt-viewer-actions{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border,#e8e4ee)}
+@media(max-width:680px){.receipt-viewer-modal{padding:0}.receipt-viewer-box{width:100vw;height:100vh;max-width:none;border-radius:0}.receipt-viewer-actions{padding:10px 12px}.receipt-viewer-actions .btn{flex:1}}
+
+
+/* =====================================================
+   V11.22 - Relatórios gerenciais
+   ===================================================== */
+.report-page-head{align-items:flex-end}.report-head-actions{display:flex;gap:10px;flex-wrap:wrap}.report-filter-panel{margin-bottom:18px}.report-filter-grid{align-items:end}.report-update-field .btn{width:100%}.report-period-hint{margin-top:12px;font-size:12px;color:var(--muted)}
+.report-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:18px}.report-metric{background:#fff;border:1px solid var(--border);border-radius:18px;padding:17px;display:flex;gap:13px;align-items:center;min-width:0;box-shadow:0 5px 18px rgba(45,27,86,.04)}.report-metric-icon{width:43px;height:43px;min-width:43px;border-radius:13px;display:grid;place-items:center;background:#f1ebff;color:#6523e8;font-weight:900;font-size:18px}.report-metric>div{min-width:0;display:flex;flex-direction:column}.report-metric small{color:var(--muted);font-size:12px}.report-metric strong{font-size:20px;line-height:1.25;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.report-metric span:not(.report-metric-icon){font-size:11px;color:var(--muted);margin-top:2px}
+.report-grid{margin-bottom:18px}.report-chart-panel,.report-ranking-panel{min-width:0}.report-bars{display:flex;flex-direction:column;gap:14px;min-height:220px}.report-bar-row{min-width:0}.report-bar-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:6px}.report-bar-label b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.report-bar-label span{color:var(--muted);white-space:nowrap}.report-bar-track{height:10px;background:#f0edf7;border-radius:99px;overflow:hidden}.report-bar-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#6a20ff,#9b64ff)}
+.report-ranking{display:flex;flex-direction:column;gap:9px;min-height:220px}.report-rank-item{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #eee9f7}.report-rank-item:last-child{border-bottom:0}.report-rank-pos{width:28px;height:28px;border-radius:9px;background:#f3eeff;color:#6a20ff;display:grid;place-items:center;font-size:12px;font-weight:900}.report-rank-item>div{min-width:0;display:flex;flex-direction:column}.report-rank-item b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.report-rank-item small{font-size:11px;color:var(--muted)}.report-rank-item strong{font-size:13px;white-space:nowrap}.report-empty{padding:36px 16px;text-align:center;color:var(--muted);font-size:13px}.report-table-panel{min-width:0}.report-table td,.report-table th{vertical-align:middle}
+@media(max-width:1200px){.report-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:760px){.report-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.report-head-actions{width:100%}.report-head-actions .btn{flex:1}.report-filter-grid .span-4,.report-filter-grid .span-3,.report-filter-grid .span-2{grid-column:span 12}.report-update-field label{display:none}.report-page-head{align-items:stretch}.report-table{min-width:760px!important}}@media(max-width:480px){.report-metrics{grid-template-columns:1fr}.report-metric strong{font-size:18px}}
+@media print{body.printing-report .sidebar,body.printing-report .topbar,body.printing-report .footer,body.printing-report .view:not(#relatorios),body.printing-report #relatorios .report-head-actions,body.printing-report #relatorios .report-filter-panel{display:none!important}body.printing-report .main{margin:0!important;width:100%!important}body.printing-report .content{padding:0!important}body.printing-report #relatorios{display:block!important}body.printing-report #relatorios .panel,body.printing-report #relatorios .report-metric{box-shadow:none!important;break-inside:avoid}body.printing-report .report-table{min-width:0!important;font-size:10px}body.printing-report .report-grid{grid-template-columns:1fr 1fr!important}}
+
+/* =====================================================
+   V11.23 - LOGIN, USUÁRIOS E PERMISSÕES
+   ===================================================== */
+.login-overlay{position:fixed;inset:0;z-index:100001;display:none;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at 20% 20%,rgba(116,49,255,.18),transparent 34%),linear-gradient(135deg,#160e2a,#28164c 52%,#120a22)}
+.login-overlay.show{display:flex}.login-card{width:min(430px,100%);background:#fff;border-radius:26px;padding:30px;box-shadow:0 32px 90px rgba(0,0,0,.35)}
+.login-brand{display:flex;justify-content:center;margin-bottom:14px}.login-brand img{width:112px;height:auto}.login-card h2{margin:0;text-align:center;font-size:26px;color:var(--text)}
+.login-card>p{margin:8px 0 22px;text-align:center;color:var(--muted)}.login-card>p.error{color:#c82c4d;font-weight:700}.login-card .field{margin-bottom:14px}.login-btn{width:100%;margin-top:4px;min-height:46px}.login-help{display:block;text-align:center;color:var(--muted);margin-top:14px}
+.logout-btn{font-size:19px}.settings-panel{display:none}.settings-panel.active{display:block}.security-panel{max-width:980px}
+.user-modal-card{width:min(880px,calc(100vw - 30px));max-height:90vh;overflow:auto}.permission-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.permission-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#faf9ff;cursor:pointer}.permission-item:hover{border-color:#bda7ff;background:#f7f4ff}.permission-item input{width:17px;height:17px;accent-color:#6a20ff}.permission-item b{font-size:13px;color:var(--text)}
+.user-role-pill{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f0eaff;color:#5d25c9;font-size:12px;font-weight:800}
+@media(max-width:760px){.permission-grid{grid-template-columns:1fr 1fr}.top-actions .search{display:none}.login-card{padding:24px 20px}.settings-tabs{overflow:auto;white-space:nowrap}}
+@media(max-width:480px){.permission-grid{grid-template-columns:1fr}.user-modal-card{width:calc(100vw - 18px)}}
+
+
+/* =====================================================
+   V11.24 - CONFIGURAÇÃO INICIAL DO ADMINISTRADOR
+   ===================================================== */
+.initial-setup-area[hidden],#normalLoginArea[hidden]{display:none!important}
+.initial-setup-area h2,#normalLoginArea h2{margin:0;text-align:center;font-size:26px;color:var(--text)}
+.initial-setup-area>p,#normalLoginArea>p{margin:8px 0 22px;text-align:center;color:var(--muted)}
+.initial-setup-area>p.error,#normalLoginArea>p.error{color:#c82c4d;font-weight:700}
+.initial-setup-badge{display:table;margin:0 auto 12px;padding:6px 10px;border-radius:999px;background:#efe8ff;color:#6429d8;font-size:10px;font-weight:900;letter-spacing:.08em}
+.initial-setup-area .field{margin-bottom:12px}
+.initial-setup-area .login-help{line-height:1.45}
+
+
+/* V11.24.1 - Login/configuração inicial sempre acima da tela de carregamento */
+#loginOverlay.login-overlay{z-index:100001!important}
+
+
+/* V11.24.4 - Nunca exibir o painel antes da autenticação */
+body.auth-pending{
+  background:linear-gradient(135deg,#160e2a,#28164c 52%,#120a22);
+}
+body.auth-pending .app{
+  visibility:hidden!important;
+  pointer-events:none!important;
+}

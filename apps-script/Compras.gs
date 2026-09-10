@@ -32,7 +32,9 @@ function finalizarCompra_(compra){
 
     let financial=readObjects_('Financeiro');
     if(compra.generateFinance!==false && !financial.some(f=>f.source==='Compra'&&String(f.sourceId)===String(compra.id))){
-      financial.unshift({id:uid_('ft'),type:'Saída',source:'Compra',sourceId:compra.id,description:'Compra '+(compra.num||'')+' - '+(compra.supplierName||'Fornecedor'),category:'Estoque',date:compra.date||todayIso_(),dueDate:compra.dueDate||compra.date||todayIso_(),value:num_(compra.total),payment:compra.payment||'Outro',status:compra.financeStatus==='Pendente'?'Pendente':'Pago',notes:'Lançamento gerado automaticamente pela compra.',createdAt:nowIso_(),paidAt:compra.financeStatus==='Pendente'?'':todayIso_()});
+      const count=Math.max(1,Math.floor(num_(compra.installments)||1));
+      const base={type:'Saída',source:'Compra',sourceId:compra.id,description:'Compra '+(compra.num||'')+' - '+(compra.supplierName||'Fornecedor'),category:'Estoque',date:compra.date||todayIso_(),dueDate:compra.dueDate||compra.date||todayIso_(),value:num_(compra.total),payment:compra.payment||'Outro',status:compra.financeStatus==='Pendente'?'Pendente':'Pago',notes:'Lançamento gerado automaticamente pela compra.',createdAt:nowIso_()};
+      const parcelas=criarParcelasFinanceiras_(base,count);parcelas.reverse().forEach(function(ft){financial.unshift(ft);});
       writeObjects_('Financeiro',financial);
     }
     log_('finalizarCompra',compra.id,compra.num||'');

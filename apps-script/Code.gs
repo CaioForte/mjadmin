@@ -1,7 +1,7 @@
-/** MJ ADMIN V11 - Entrada da API. Mantenha este arquivo enxuto. */
+/** MJ ADMIN V11.25 - Entrada da API otimizada. */
 function doGet(e) {
   const action = String((e && e.parameter && e.parameter.action) || 'ping');
-  return route_({ action: action });
+  return route_({ action: action, token: e && e.parameter ? e.parameter.token : '' });
 }
 
 function doPost(e) {
@@ -16,9 +16,44 @@ function doPost(e) {
 function route_(body) {
   try {
     setupDatabase_();
-    switch (body.action) {
-      case 'ping': return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), timestamp: nowIso_() });
-      case 'bootstrap': return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), data: bootstrapData_() });
+    const action = String(body.action || '');
+
+    // Rotas públicas.
+    if (action === 'ping') {
+      return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), timestamp: nowIso_() });
+    }
+    if (action === 'statusConfiguracao') {
+      return json_({ ok: true, data: verificarConfiguracaoInicial_() });
+    }
+    if (action === 'criarAdministradorInicial') {
+      return json_({ ok: true, data: criarAdministradorInicial_(body || {}) });
+    }
+    if (action === 'login') {
+      return json_({ ok: true, data: loginUsuario_(body.email || '', body.password || '') });
+    }
+    if (action === 'logout') {
+      logoutUsuario_(body.token || '');
+      return json_({ ok: true });
+    }
+
+    const user = validarSessao_(body.token || '');
+    if (!user) {
+      return json_({ ok: false, code: 'AUTH_REQUIRED', message: 'Sua sessão expirou. Faça login novamente.' });
+    }
+
+    if (action === 'sessao') {
+      return json_({ ok: true, data: { user: usuarioPublico_(user), expiresIn: MJ_SESSION_TTL } });
+    }
+
+    const required = permissaoParaAcao_(body);
+    if (required && !temPermissao_(user, required)) {
+      return json_({ ok: false, code: 'FORBIDDEN', message: 'Seu usuário não possui permissão para realizar esta operação.' });
+    }
+
+    switch (action) {
+      case 'bootstrap': return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), data: bootstrapDataUsuario_(user) });
+      case 'bootstrapLite': return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), data: bootstrapLiteDataUsuario_(user) });
+      case 'loadKeys': return json_({ ok: true, data: loadKeysDataUsuario_(user, body.keys || []) });
       case 'syncKey': syncKey_(String(body.key || ''), body.data); return json_({ ok: true, key: body.key, timestamp: nowIso_() });
       case 'syncAll': syncAll_(body.data || {}); return json_({ ok: true, timestamp: nowIso_() });
 
@@ -33,6 +68,9 @@ function route_(body) {
       case 'finalizarCompra': return json_({ ok: true, data: finalizarCompra_(body.compra || {}) });
       case 'cancelarCompra': return json_({ ok: true, data: cancelarCompra_(String(body.id || '')) });
 
+      case 'anexarComprovante': return json_({ ok: true, data: anexarComprovante_(body || {}) });
+      case 'obterComprovante': return json_({ ok: true, data: obterComprovante_(body || {}) });
+
       case 'salvarFinanceiro': return json_({ ok: true, data: salvarFinanceiro_(body.lancamento || {}) });
       case 'marcarFinanceiroPago': return json_({ ok: true, data: marcarFinanceiroPago_(String(body.id || '')) });
 
@@ -40,7 +78,12 @@ function route_(body) {
       case 'excluirDespesa': excluirDespesa_(String(body.id || '')); return json_({ ok: true });
       case 'marcarDespesaPaga': return json_({ ok: true, data: marcarDespesaPaga_(String(body.id || '')) });
 
-      default: return json_({ ok: false, message: 'Ação não reconhecida: ' + body.action });
+      case 'listarUsuarios': return json_({ ok: true, data: listarUsuarios_() });
+      case 'salvarUsuario': return json_({ ok: true, data: salvarUsuario_(body.usuario || {}, user) });
+      case 'excluirUsuario': excluirUsuario_(String(body.id || ''), user); return json_({ ok: true });
+      case 'alterarMinhaSenha': alterarSenhaPropria_(user, body.currentPassword || '', body.newPassword || ''); return json_({ ok: true });
+
+      default: return json_({ ok: false, message: 'Ação não reconhecida: ' + action });
     }
   } catch (err) {
     log_('error', body && body.action, err.message);

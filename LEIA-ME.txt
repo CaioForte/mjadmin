@@ -1,0 +1,27 @@
+MJ ADMIN V11.24 - Configuração inicial do administrador
+
+Arquivos alterados:
+- apps-script/Usuarios.gs
+- apps-script/Code.gs
+- apps-script/Config.gs
+- index.html
+- js/api.js
+- css/styles.css
+
+Como aplicar:
+1. Substitua Usuarios.gs, Code.gs e Config.gs no Apps Script.
+2. Substitua index.html, js/api.js e css/styles.css no projeto local.
+3. NÃO execute configurarAdministradorInicial().
+4. Execute setupDatabase() apenas se ainda não tiver executado para a V11.23.
+5. Faça uma NOVA VERSÃO da implantação do Web App.
+6. Confirme no ?action=ping que aparece 11.24.0.
+7. Abra o MJ Admin.
+
+Se não houver administrador ativo:
+- será exibida automaticamente a tela "Configuração inicial";
+- informe nome, e-mail, senha e confirmação;
+- o primeiro administrador será criado e a sessão será iniciada.
+
+Se já existir administrador ativo:
+- a configuração inicial não aparece;
+- o sistema abre a tela normal de login.
