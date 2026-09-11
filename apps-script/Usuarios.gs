@@ -5,7 +5,7 @@ const MJ_SESSION_PREFIX = 'MJ_SESSION_';
 const MJ_PERMISSIONS = [
   'dashboard','nova-venda','vendas','orcamentos','produtos','clientes',
   'fornecedores','compras','estoque','financeiro','despesas','relatorios',
-  'configuracoes','usuarios'
+  'configuracoes','usuarios','auditoria'
 ];
 
 function permissoesPadraoPerfil_(role) {
@@ -87,6 +87,7 @@ function loginUsuario_(email, senha) {
   user.lastLoginAt = nowIso_();
   upsertObject_('Usuarios', user);
   const token = criarSessao_(user);
+  setAuditActor_(user);
   log_('login', user.id, user.email);
   return { token: token, user: usuarioPublico_(user), expiresIn: MJ_SESSION_TTL };
 }
@@ -139,7 +140,7 @@ function salvarUsuario_(payload, actor) {
   }
 
   upsertObject_('Usuarios', user);
-  log_('salvarUsuario', user.id, 'Por ' + (actor ? actor.email : 'sistema'));
+  log_('salvarUsuario', user.id, user.name + ' • ' + user.email);
   return usuarioPublico_(user);
 }
 
@@ -154,7 +155,7 @@ function excluirUsuario_(id, actor) {
     if (!otherAdmins.length) throw new Error('Não é possível excluir o último administrador ativo.');
   }
   deleteObject_('Usuarios', id);
-  log_('excluirUsuario', id, 'Por ' + (actor ? actor.email : 'sistema'));
+  log_('excluirUsuario', id, user.name + ' • ' + user.email);
   return true;
 }
 
@@ -225,6 +226,7 @@ function criarAdministradorInicial_(payload) {
 
   upsertObject_('Usuarios', user);
   const token = criarSessao_(user);
+  setAuditActor_(user);
   log_('criarAdministradorInicial', user.id, user.email);
 
   return {
@@ -254,12 +256,13 @@ function permissaoParaSyncKey_(key) {
 function permissaoParaAcao_(body) {
   const action = String((body && body.action) || '');
   const fixed = {
+    salvarProduto:'produtos', excluirProduto:'produtos',
     salvarOrcamento:'orcamentos', excluirOrcamento:'orcamentos', converterOrcamento:'orcamentos', enviarOrcamentoEmail:'orcamentos',
     finalizarVenda:'nova-venda', cancelarVenda:'vendas',
     finalizarCompra:'compras', cancelarCompra:'compras',
     salvarFinanceiro:'financeiro', marcarFinanceiroPago:'financeiro',
     salvarDespesa:'despesas', excluirDespesa:'despesas', marcarDespesaPaga:'despesas',
-    listarUsuarios:'usuarios', salvarUsuario:'usuarios', excluirUsuario:'usuarios'
+    listarUsuarios:'usuarios', salvarUsuario:'usuarios', excluirUsuario:'usuarios', listarAuditoria:'auditoria'
   };
   if (action === 'syncKey') return permissaoParaSyncKey_(body.key);
   if (action === 'syncAll') return 'usuarios';

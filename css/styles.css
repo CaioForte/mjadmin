@@ -613,3 +613,10 @@ body.auth-pending .app{
   visibility:hidden!important;
   pointer-events:none!important;
 }
+
+
+/* =====================================================
+   V11.27 - AUDITORIA
+   ===================================================== */
+.audit-page-head{align-items:flex-end}.audit-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.audit-filter-panel{margin-bottom:18px}.audit-filter-grid{align-items:end}.audit-filter-actions .btn{width:100%}.audit-note{margin-top:12px;padding:11px 13px;border-radius:12px;background:#f8f5ff;color:#6f6384;font-size:12px;border:1px solid #e9e0ff}.audit-table-panel{min-width:0}.audit-table{min-width:1040px}.audit-user,.audit-record{display:flex;flex-direction:column;gap:2px;min-width:130px}.audit-user small,.audit-record small{font-size:10px;color:var(--muted)}.audit-module{display:inline-flex;padding:5px 9px;border-radius:999px;background:#f3effb;color:#59486d;font-size:11px;font-weight:800}.audit-action{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}.audit-action.audit-info{background:#edf7ff;color:#17679f}.audit-action.audit-security{background:#f2ecff;color:#6428d6}.audit-action.audit-warning{background:#fff4e5;color:#b96800}.audit-action.audit-error{background:#fff0f2;color:#c62849}
+@media(max-width:1050px){.audit-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.audit-stats{grid-template-columns:1fr}.audit-filter-grid .span-3,.audit-filter-grid .span-4,.audit-filter-grid .span-8{grid-column:span 12}.audit-page-head{align-items:stretch}.audit-page-head .btn{width:100%}}

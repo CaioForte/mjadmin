@@ -1,5 +1,5 @@
 /* =====================================================
-   MJ ADMIN V11.25 - GOOGLE SHEETS + APPS SCRIPT + LOGIN
+   MJ ADMIN V11.27 - GOOGLE SHEETS + APPS SCRIPT + LOGIN
    Google Sheets = fonte principal.
    localStorage = cache local.
    sessionStorage = sessão do usuário (token de 6h no backend).
@@ -16,8 +16,8 @@
   let hydrated = false;
   let syncingBootstrap = false;
   let currentUser = null;
+  let auditCache = [];
   let loginPromise = null;
-  const loadedKeys = new Set();
 
   function getConfig() {
     try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null') || { enabled: true, url: DEFAULT_API_URL }; }
@@ -236,36 +236,22 @@
     el.textContent = text; el.classList.toggle('cloud-error', !!error);
   }
 
-  function persistRemote(remote){
-    remote = remote || {};
-    if(remote.mj_current_user) currentUser=remote.mj_current_user;
-    const changed={};
-    for (const key of DATA_KEYS) {
-      if (!(key in remote)) continue;
-      const fallback = key.includes('config') ? {} : [];
-      const value = remote[key] ?? fallback;
-      localStorage.setItem(key, JSON.stringify(value));
-      loadedKeys.add(key);
-      changed[key]=value;
-    }
-    return changed;
-  }
-
   async function bootstrap() {
     const cfg = getConfig();
     if (!cfg.enabled || !cfg.url) { hydrated = true; setStatus('off','Desativado'); setInfo('Banco em nuvem desativado.'); return { connected:false }; }
     if (syncingBootstrap) return { connected:false };
-    syncingBootstrap = true; setStatus('loading','Conectando...'); setInfo('Carregando dados essenciais...');
-    window.MJAppLoader?.set?.('loading','Carregando dados essenciais do painel...',28);
+    syncingBootstrap = true; setStatus('loading','Conectando...'); setInfo('Carregando dados da planilha...');
+    window.MJAppLoader?.set?.('loading','Conectando ao Google Sheets...',18);
     try {
-      const res = await request('bootstrapLite');
-      window.MJAppLoader?.set?.('loading','Recebendo Dashboard...',58);
-      const liteRemote=res.data || {};
-      // Evita exibir cache antigo de módulos ainda não carregados (inclusive entre usuários).
-      for(const key of DATA_KEYS){if(!(key in liteRemote)){try{localStorage.removeItem(key);}catch(_){}}}
-      persistRemote(liteRemote);
-      hydrated = true;
-      window.MJAppLoader?.set?.('loading','Painel pronto. Os demais módulos serão carregados quando necessários.',78);
+      const res = await request('bootstrap');
+      window.MJAppLoader?.set?.('loading','Recebendo dados permitidos para seu usuário...',52);
+      const remote = res.data || {};
+      if(remote.mj_current_user) currentUser=remote.mj_current_user;
+      for (const key of DATA_KEYS) {
+        const fallback = key.includes('config') ? {} : [];
+        localStorage.setItem(key, JSON.stringify((key in remote) ? (remote[key] ?? fallback) : fallback));
+      }
+      hydrated = true; window.MJAppLoader?.set?.('loading','Sincronização concluída. Preparando interface...',76);
       setStatus('ok','Conectado'); setInfo(`Planilha conectada • ${res.spreadsheetName || 'Banco MJ'} • ${new Date().toLocaleString('pt-BR')}`);
       return { connected:true, response:res };
     } catch (err) {
@@ -274,16 +260,6 @@
       setStatus('error','Sem conexão');setInfo(`Não foi possível carregar a planilha. ${err.message}`,true);console.error('[MJ Cloud] Bootstrap:',err);
       return { connected:false,error:err };
     } finally { syncingBootstrap=false; }
-  }
-
-  async function ensureKeys(keys){
-    const requested=[...new Set((Array.isArray(keys)?keys:[]).filter(k=>DATA_KEYS.includes(k)))];
-    const missing=requested.filter(k=>!loadedKeys.has(k));
-    if(!missing.length) return {loaded:false,keys:requested,data:{}};
-    const res=await request('loadKeys',{keys:missing},40000);
-    const changed=persistRemote(res.data||{});
-    window.dispatchEvent(new CustomEvent('mj-data-loaded',{detail:{keys:Object.keys(changed),data:changed}}));
-    return {loaded:true,keys:Object.keys(changed),data:changed};
   }
 
   async function syncKey(key,data){
@@ -316,13 +292,15 @@
   window.addEventListener('mj-auth-required',()=>{showLogin('Sua sessão expirou. Entre novamente.');});
 
   window.MJCloud={
-    init,request,bootstrap,ensureKeys,syncAll,pushKey:syncKey,getConfig,DATA_KEYS,getLoadedKeys:()=>Array.from(loadedKeys),getCurrentUser:()=>currentUser,getToken,logout,
+    init,request,bootstrap,syncAll,pushKey:syncKey,getConfig,DATA_KEYS,getCurrentUser:()=>currentUser,getToken,logout,
+    saveProduct:produto=>request('salvarProduto',{produto},30000),deleteProduct:id=>request('excluirProduto',{id},30000),
     saveQuote:orcamento=>request('salvarOrcamento',{orcamento}),deleteQuote:id=>request('excluirOrcamento',{id}),convertQuote:(id,saleId='')=>request('converterOrcamento',{id,saleId}),sendQuoteEmail:id=>request('enviarOrcamentoEmail',{id},30000),
     finalizeSale:venda=>request('finalizarVenda',{venda},30000),cancelSale:id=>request('cancelarVenda',{id},30000),
     saveFinancial:lancamento=>request('salvarFinanceiro',{lancamento}),markFinancialPaid:id=>request('marcarFinanceiroPago',{id}),
     saveExpense:despesa=>request('salvarDespesa',{despesa}),deleteExpense:id=>request('excluirDespesa',{id}),markExpensePaid:id=>request('marcarDespesaPaga',{id}),
     finalizePurchase:compra=>request('finalizarCompra',{compra},30000),cancelPurchase:id=>request('cancelarCompra',{id},30000),
     uploadReceipt:(entityType,id,fileName,mimeType,base64)=>request('anexarComprovante',{entityType,id,fileName,mimeType,base64},45000),getReceipt:(entityType,id)=>request('obterComprovante',{entityType,id},45000),
-    listUsers:()=>request('listarUsuarios',{},30000),saveUser:usuario=>request('salvarUsuario',{usuario},30000),deleteUser:id=>request('excluirUsuario',{id},30000),changeMyPassword:(currentPassword,newPassword)=>request('alterarMinhaSenha',{currentPassword,newPassword},30000)
+    listUsers:()=>request('listarUsuarios',{},30000),saveUser:usuario=>request('salvarUsuario',{usuario},30000),deleteUser:id=>request('excluirUsuario',{id},30000),changeMyPassword:(currentPassword,newPassword)=>request('alterarMinhaSenha',{currentPassword,newPassword},30000),
+    getAuditLogs:()=>auditCache.slice(),listAudit:async(filters={})=>{const res=await request('listarAuditoria',{filters},30000);auditCache=Array.isArray(res.data)?res.data:[];return res;}
   };
 })();

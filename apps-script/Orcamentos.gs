@@ -11,4 +11,4 @@ function salvarOrcamento_(orcamento){
   });
 }
 function excluirOrcamento_(id){ if(!id)throw new Error('ID do orçamento não informado.'); return withLock_(function(){ deleteObject_('Orcamentos',id); replaceItemsForParent_('OrcamentosItens',id,'orcamentoId',[]); log_('excluirOrcamento',id,''); }); }
-function converterOrcamento_(id,saleId){ const q=readObjects_('Orcamentos').find(x=>String(x.id)===String(id)); if(!q)throw new Error('Orçamento não encontrado.'); q.status='Convertido'; q.convertedAt=nowIso_(); if(saleId)q.saleId=saleId; upsertObject_('Orcamentos',q); return q; }
+function converterOrcamento_(id,saleId){ const q=readObjects_('Orcamentos').find(x=>String(x.id)===String(id)); if(!q)throw new Error('Orçamento não encontrado.'); q.status='Convertido'; q.convertedAt=nowIso_(); if(saleId)q.saleId=saleId; upsertObject_('Orcamentos',q); log_('converterOrcamento',id,q.num||''); return q; }

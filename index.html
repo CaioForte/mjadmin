@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MJ Envelopamento — Painel Administrativo V11.25.0</title>
-<link rel="stylesheet" href="css/styles.css?v=11.25.0" />
+<title>MJ Envelopamento — Painel Administrativo V11.27.1</title>
+<link rel="stylesheet" href="css/styles.css?v=11.27.2" />
 </head>
 <body class="auth-pending">
 <div id="loginOverlay" class="login-overlay" aria-hidden="true">
@@ -79,6 +79,7 @@
       <button data-view="financeiro"><span class="icon">$</span><span>Financeiro</span></button>
       <button data-view="despesas"><span class="icon">▣</span><span>Despesas</span></button>
       <button data-view="relatorios"><span class="icon">▥</span><span>Relatórios</span></button>
+      <button data-view="auditoria"><span class="icon">◉</span><span>Auditoria</span></button>
       <button data-view="configuracoes"><span class="icon">⚙</span><span>Configurações</span></button>
     </nav>
     <div class="sidebar-footer">QUALIDADE<br>QUE TRANSFORMA<br>SEU ESTILO<div class="cmyk-line"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div></div>
@@ -542,6 +543,33 @@
         </article>
       </section>
 
+      <section class="view" id="auditoria">
+        <div class="page-head audit-page-head">
+          <div><h2>Auditoria</h2><p>Acompanhe quem realizou cada operação importante no sistema.</p></div>
+          <button class="btn btn-line" id="refreshAuditBtn" type="button">↻ Atualizar registros</button>
+        </div>
+        <div class="cards audit-stats">
+          <article class="metric"><label>Registros carregados</label><strong id="auditTotalCount">0</strong><div class="trend">Últimos registros de auditoria</div></article>
+          <article class="metric"><label>Usuários no período</label><strong id="auditUsersCount">0</strong><div class="trend">Usuários com ações registradas</div></article>
+          <article class="metric"><label>Ações hoje</label><strong id="auditTodayCount">0</strong><div class="trend">Atividades registradas hoje</div></article>
+          <article class="metric"><label>Erros registrados</label><strong id="auditErrorCount">0</strong><div class="trend">Ocorrências técnicas no histórico</div></article>
+        </div>
+        <article class="panel audit-filter-panel">
+          <div class="form-grid audit-filter-grid">
+            <div class="field span-3"><label>Data inicial</label><input id="auditStartDate" type="date"></div>
+            <div class="field span-3"><label>Data final</label><input id="auditEndDate" type="date"></div>
+            <div class="field span-3"><label>Módulo</label><select id="auditModuleFilter"><option value="">Todos os módulos</option></select></div>
+            <div class="field span-3"><label>Usuário</label><select id="auditUserFilter"><option value="">Todos os usuários</option></select></div>
+            <div class="field span-8"><label>Pesquisar</label><input id="auditSearch" placeholder="Venda, cliente, número, ação, usuário..."></div>
+            <div class="field span-4 audit-filter-actions"><label>&nbsp;</label><button class="btn btn-line" id="clearAuditFilters" type="button">Limpar filtros</button></div>
+          </div>
+          <div class="audit-note">Os registros de auditoria são somente leitura. Senhas, hashes e tokens de sessão não são armazenados.</div>
+        </article>
+        <article class="panel audit-table-panel">
+          <div class="panel-head"><h3>Histórico de atividades</h3><span class="result-count" id="auditResultCount">0 registro(s)</span></div>
+          <div class="table-scroll"><table class="data-table audit-table"><thead><tr><th>Data / hora</th><th>Usuário</th><th>Módulo</th><th>Ação</th><th>Registro</th><th>Detalhes</th></tr></thead><tbody id="auditBody"></tbody></table></div>
+        </article>
+      </section>
       <section class="view" id="configuracoes">
         <div class="page-head"><div><h2>Configurações</h2><p>Gerencie usuários, acesso ao sistema e conexão com o banco.</p></div></div>
         <div class="settings-tabs" id="settingsTabs">
@@ -599,7 +627,7 @@
         </div>
       </section>
     </div>
-    <footer class="footer"><span>MJ Envelopamento — V11.25.0</span><span style="display:flex;align-items:center;gap:8px">IDEIAS QUE GANHAM VIDA <span class="mini-lines"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span></span></footer>
+    <footer class="footer"><span>MJ Envelopamento — V11.27.1</span><span style="display:flex;align-items:center;gap:8px">IDEIAS QUE GANHAM VIDA <span class="mini-lines"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span></span></footer>
   </main>
 </div>
 
@@ -677,7 +705,7 @@
   </div>
 </div>
 
-<script src="js/api.js"></script>
+<script src="js/api.js?v=11.27.2"></script>
 <script>
 (function(){
   const overlay = document.getElementById('appLoadingOverlay');
@@ -702,7 +730,7 @@
     mainLoaded = true;
     setLoader('loading','Preparando o painel...',92);
     const script = document.createElement('script');
-    script.src = 'js/main.js?v=11.25.0';
+    script.src = 'js/main.js?v=11.27.2';
     script.onload = () => {
       setLoader('ready','Sistema pronto!',100);
       title.textContent = 'Sistema pronto!';
@@ -736,7 +764,7 @@
   }
 
   async function start(){
-    // V11.25.0: fluxo de autenticação sem segundo login após logout.
+    // V11.27.1: autenticação estável + auditoria carregada somente ao abrir o módulo.
     // O login continua acima deste loader e aparece assim que a verificação terminar.
     showLoader();
     spinner.hidden = false; icon.hidden = true; actions.hidden = true;
@@ -750,14 +778,14 @@
       // Autenticação concluída. Só agora o painel pode ficar visível.
       document.body.classList.remove('auth-pending');
       showLoader();
-      title.textContent = 'Carregando o painel...';
-      hint.textContent = 'Carregando apenas os dados essenciais. Os demais módulos serão buscados quando você abrir cada tela.';
-      setLoader('loading','Buscando dados essenciais...',18);
+      title.textContent = 'Carregando o sistema...';
+      hint.textContent = 'Aguarde alguns instantes. Os dados estão sendo sincronizados.';
+      setLoader('loading','Conectando ao Google Sheets...',12);
 
       const result = await window.MJCloud.bootstrap();
       if (result?.connected === false && result?.error) throw result.error;
 
-      setLoader('loading','Dados essenciais recebidos. Montando o painel...',84);
+      setLoader('loading','Dados recebidos. Montando o painel...',80);
       loadMain();
     } catch (err) {
       console.error('[MJ] Falha na carga inicial:', err);

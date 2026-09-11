@@ -27,7 +27,7 @@ function criarParcelasFinanceiras_(base,count){
   }
   return out;
 }
-function salvarFinanceiro_(item){ if(!item.id)item.id=uid_('ft'); item.updatedAt=nowIso_(); upsertObject_('Financeiro',item); return item; }
+function salvarFinanceiro_(item){ if(!item.id)item.id=uid_('ft'); item.updatedAt=nowIso_(); upsertObject_('Financeiro',item); log_('salvarFinanceiro',item.id,item.description||''); return item; }
 function marcarFinanceiroPago_(id){
   const all=readObjects_('Financeiro'),item=all.find(x=>String(x.id)===String(id));
   if(!item)throw new Error('Lançamento financeiro não encontrado.');
@@ -46,5 +46,6 @@ function marcarFinanceiroPago_(id){
     const expense=readObjects_('Despesas').find(x=>String(x.id)===String(item.sourceId));
     if(expense){expense.status='Pago';upsertObject_('Despesas',expense);}
   }
+  log_('marcarFinanceiroPago',item.id,item.description||'');
   return item;
 }

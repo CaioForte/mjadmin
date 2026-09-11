@@ -1,4 +1,4 @@
-/** MJ ADMIN V11.25 - Entrada da API otimizada. */
+/** MJ ADMIN V11.27.2 - Entrada da API com auditoria. */
 function doGet(e) {
   const action = String((e && e.parameter && e.parameter.action) || 'ping');
   return route_({ action: action, token: e && e.parameter ? e.parameter.token : '' });
@@ -16,6 +16,7 @@ function doPost(e) {
 function route_(body) {
   try {
     setupDatabase_();
+    setAuditActor_(null);
     const action = String(body.action || '');
 
     // Rotas públicas.
@@ -32,6 +33,8 @@ function route_(body) {
       return json_({ ok: true, data: loginUsuario_(body.email || '', body.password || '') });
     }
     if (action === 'logout') {
+      const logoutUser = validarSessao_(body.token || '', false);
+      if (logoutUser) { setAuditActor_(logoutUser); log_('logout', logoutUser.id, logoutUser.email); }
       logoutUsuario_(body.token || '');
       return json_({ ok: true });
     }
@@ -45,6 +48,8 @@ function route_(body) {
       return json_({ ok: true, data: { user: usuarioPublico_(user), expiresIn: MJ_SESSION_TTL } });
     }
 
+    setAuditActor_(user);
+
     const required = permissaoParaAcao_(body);
     if (required && !temPermissao_(user, required)) {
       return json_({ ok: false, code: 'FORBIDDEN', message: 'Seu usuário não possui permissão para realizar esta operação.' });
@@ -52,10 +57,12 @@ function route_(body) {
 
     switch (action) {
       case 'bootstrap': return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), data: bootstrapDataUsuario_(user) });
-      case 'bootstrapLite': return json_({ ok: true, version: MJ_DB.version, spreadsheetName: getDb_().getName(), data: bootstrapLiteDataUsuario_(user) });
-      case 'loadKeys': return json_({ ok: true, data: loadKeysDataUsuario_(user, body.keys || []) });
       case 'syncKey': syncKey_(String(body.key || ''), body.data); return json_({ ok: true, key: body.key, timestamp: nowIso_() });
       case 'syncAll': syncAll_(body.data || {}); return json_({ ok: true, timestamp: nowIso_() });
+
+      // Produtos usam rotas próprias para garantir a auditoria da inclusão/alteração/exclusão.
+      case 'salvarProduto': return json_({ ok: true, data: salvarProdutoAuditado_(body.produto || {}) });
+      case 'excluirProduto': return json_({ ok: true, data: excluirProdutoAuditado_(String(body.id || '')) });
 
       case 'salvarOrcamento': return json_({ ok: true, data: salvarOrcamento_(body.orcamento || {}) });
       case 'excluirOrcamento': excluirOrcamento_(String(body.id || '')); return json_({ ok: true });
@@ -77,6 +84,8 @@ function route_(body) {
       case 'salvarDespesa': return json_({ ok: true, data: salvarDespesa_(body.despesa || {}) });
       case 'excluirDespesa': excluirDespesa_(String(body.id || '')); return json_({ ok: true });
       case 'marcarDespesaPaga': return json_({ ok: true, data: marcarDespesaPaga_(String(body.id || '')) });
+
+      case 'listarAuditoria': return json_({ ok: true, data: listarAuditoria_(body.filters || {}) });
 
       case 'listarUsuarios': return json_({ ok: true, data: listarUsuarios_() });
       case 'salvarUsuario': return json_({ ok: true, data: salvarUsuario_(body.usuario || {}, user) });

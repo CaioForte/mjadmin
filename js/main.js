@@ -1,4 +1,4 @@
-// V11.25 - carregamento otimizado por módulo + login, usuários e permissões
+// V11.27.1 - auditoria sob demanda
 const MJCurrentUser = window.MJCloud?.getCurrentUser?.() || {name:'Usuário',role:'',permissions:[]};
 const MJUserPermissions = new Set(Array.isArray(MJCurrentUser.permissions)?MJCurrentUser.permissions:[]);
 function canAccess(view){
@@ -25,38 +25,13 @@ function updateProcessOverlay(message){const el=document.getElementById('process
 function hideProcessOverlay(){const overlay=document.getElementById('processOverlay');if(overlay)overlay.classList.remove('show');document.body.classList.remove('process-busy');}
 const views=[...document.querySelectorAll('.view')];
 const navBtns=[...document.querySelectorAll('#nav button')];
-const VIEW_DATA_KEYS={
-  dashboard:[],
-  'nova-venda':['mj_clients'],
-  vendas:[],
-  orcamentos:['mj_clients'],
-  produtos:[],
-  clientes:['mj_clients'],
-  fornecedores:['mj_suppliers'],
-  compras:['mj_purchases','mj_suppliers','mj_financial_transactions'],
-  estoque:[],
-  financeiro:['mj_financial_transactions'],
-  despesas:['mj_suppliers'],
-  relatorios:['mj_clients','mj_suppliers','mj_purchases','mj_financial_transactions'],
-  configuracoes:[]
-};
-const VIEW_LABELS={
-  'nova-venda':'Nova Venda',vendas:'Vendas',orcamentos:'Orçamentos',produtos:'Produtos',clientes:'Clientes',fornecedores:'Fornecedores',compras:'Compras',estoque:'Estoque',financeiro:'Financeiro',despesas:'Despesas',relatorios:'Relatórios',configuracoes:'Configurações',dashboard:'Dashboard'
-};
-async function ensureViewData(view){
-  const keys=VIEW_DATA_KEYS[view]||[];
-  if(!keys.length||!window.MJCloud?.ensureKeys)return;
-  const loaded=new Set(window.MJCloud.getLoadedKeys?.()||[]);
-  if(keys.every(k=>loaded.has(k)))return;
-  showProcessOverlay(`Carregando ${VIEW_LABELS[view]||'dados'}...`,'Buscando somente as informações necessárias para esta tela.');
-  try{await window.MJCloud.ensureKeys(keys);}finally{hideProcessOverlay();}
-}
-async function go(view,options={}){
+function go(view,options={}){
   if(!canAccess(view)){toast('Seu usuário não possui permissão para acessar esta área.');return;}
-  try{await ensureViewData(view);}catch(err){console.error('[MJ] Carregamento do módulo:',err);toast(err.message||'Não foi possível carregar os dados desta tela.');return;}
   if(view==='nova-venda'&&options.freshSale&&typeof clearSaleForm==='function')clearSaleForm(false);
   views.forEach(v=>v.classList.toggle('active',v.id===view));
   navBtns.forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  // Guarda a tela atual durante a sessão. Se uma sincronização com o Google
+  // precisar recarregar a página, o usuário volta para o mesmo módulo.
   try{sessionStorage.setItem('mj_active_view',view);}catch(_){ }
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -90,7 +65,7 @@ function normalizeQuote(q,index){
   const discount=Number(q.discount||Math.max(0,subtotal-total)||0);
   return {...q,id:q.id||`q-${Date.now()}-${index}`,num:q.num||`ORC-${String(index+1).padStart(4,'0')}`,date:q.date||isoFromBR(q.data)||currentISODate(),data:q.data||brDate(q.date),clientId:q.clientId||'',cliente:q.cliente||'',items,subtotal,discount,total:Math.max(0,subtotal-discount),valor:moneyBR(Math.max(0,subtotal-discount)),validity:q.validity||isoFromBR(q.validade)||'',validade:q.validade||brDate(q.validity),status:q.status||'Pendente',paymentTerms:q.paymentTerms||'',obs:q.obs||''};
 }
-function migrateQuotes(){quotes=quotes.map(normalizeQuote);localStorage.setItem('mj_quotes',JSON.stringify(quotes));}
+function migrateQuotes(){quotes=quotes.map(normalizeQuote);saveQuotes();}
 function nextQuoteNumber(){
   const nums=quotes.map(q=>parseInt(String(q.num||'').replace(/\D/g,''),10)).filter(Number.isFinite);
   return `ORC-${String((nums.length?Math.max(...nums):0)+1).padStart(4,'0')}`;
@@ -343,10 +318,19 @@ function openProductForm(product=null){
 }
 function closeProductForm(){document.getElementById('productFormPanel').style.display='none';document.getElementById('productEditId').value='';}
 function editProduct(id){const p=products.find(x=>x.id===id);if(p){go('produtos');openProductForm(p)}}
-function deleteProduct(id){
+async function deleteProduct(id){
   const p=products.find(x=>x.id===id); if(!p)return;
   if(!confirm(`Excluir o produto "${p.name}"?`))return;
-  products=products.filter(x=>x.id!==id); saveProducts(); renderProducts(); toast('Produto excluído com sucesso.');
+  try{
+    if(window.MJCloud?.deleteProduct) await window.MJCloud.deleteProduct(id);
+    products=products.filter(x=>x.id!==id);
+    localStorage.setItem('mj_products',JSON.stringify(products));
+    renderProducts();
+    toast('Produto excluído com sucesso.');
+  }catch(err){
+    console.error('[MJ] Exclusão produto:',err);
+    toast(err.message||'Não foi possível excluir o produto.');
+  }
 }
 function renderStock(){
   const body=document.getElementById('stockBody'); if(!body)return;
@@ -427,7 +411,7 @@ document.getElementById('productStatusFilter')?.addEventListener('change',render
 document.getElementById('stockSearch')?.addEventListener('input',renderStock);
 document.getElementById('productUnit')?.addEventListener('change',e=>{if(e.target.value==='SV'){document.getElementById('productStock').value=0;document.getElementById('productMinStock').value=0;}});
 document.getElementById('productVariablePrice')?.addEventListener('change',syncProductPriceMode);
-document.getElementById('productForm')?.addEventListener('submit',e=>{
+document.getElementById('productForm')?.addEventListener('submit',async e=>{
   e.preventDefault();
   const id=document.getElementById('productEditId').value; const code=document.getElementById('productCode').value.trim()||nextProductCode();
   const name=document.getElementById('productName').value.trim(); const category=document.getElementById('productCategory').value.trim();
@@ -435,8 +419,19 @@ document.getElementById('productForm')?.addEventListener('submit',e=>{
   if(products.some(p=>p.code.toLowerCase()===code.toLowerCase()&&p.id!==id)){toast('Já existe um produto com esse código.');return;}
   const variablePrice=document.getElementById('productVariablePrice').checked||!document.getElementById('productPrice').value.trim(); const item={id:id||('p'+Date.now()),code,name,category,description:document.getElementById('productDescription').value.trim(),unit:document.getElementById('productUnit').value,cost:parseMoneyBR(document.getElementById('productCost').value),price:variablePrice?0:parseMoneyBR(document.getElementById('productPrice').value),variablePrice,stock:Number(document.getElementById('productStock').value||0),minStock:Number(document.getElementById('productMinStock').value||0),supplier:document.getElementById('productSupplier').value.trim(),status:document.getElementById('productStatus').value};
   if(item.price<0||item.cost<0||item.stock<0||item.minStock<0){toast('Valores negativos não são permitidos.');return;}
-  if(id){products=products.map(p=>p.id===id?item:p);}else{products.unshift(item);}
-  saveProducts(); renderProducts(); closeProductForm(); toast(id?'Produto atualizado com sucesso.':'Produto cadastrado com sucesso.');
+  const btn=document.querySelector('#productForm button[type="submit"]');
+  const oldText=btn?.textContent; if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const response=window.MJCloud?.saveProduct?await window.MJCloud.saveProduct(item):null;
+    const saved=response?.data||item;
+    if(id) products=products.map(p=>p.id===id?saved:p); else products.unshift(saved);
+    localStorage.setItem('mj_products',JSON.stringify(products));
+    renderProducts(); closeProductForm();
+    toast(id?'Produto atualizado com sucesso.':'Produto cadastrado com sucesso.');
+  }catch(err){
+    console.error('[MJ] Produto:',err);
+    toast(err.message||'Não foi possível salvar o produto.');
+  }finally{if(btn){btn.disabled=false;btn.textContent=oldText||'Salvar produto';}}
 });
 renderProducts();
 
@@ -1147,7 +1142,7 @@ initReportsV1122();
 const USER_PERMISSION_LABELS = {
   dashboard:'Dashboard','nova-venda':'Nova Venda',vendas:'Vendas',orcamentos:'Orçamentos',produtos:'Produtos',clientes:'Clientes',
   fornecedores:'Fornecedores',compras:'Compras',estoque:'Estoque',financeiro:'Financeiro',despesas:'Despesas',relatorios:'Relatórios',
-  configuracoes:'Configurações',usuarios:'Gerenciar usuários'
+  configuracoes:'Configurações',usuarios:'Gerenciar usuários',auditoria:'Auditoria'
 };
 const ROLE_DEFAULT_PERMISSIONS = {
   Administrador:Object.keys(USER_PERMISSION_LABELS),
@@ -1250,30 +1245,91 @@ async function changeMyPassword(){
   catch(err){toast(err.message||'Não foi possível alterar a senha.');}
   finally{if(btn){btn.disabled=false;btn.textContent='Alterar senha';}}
 }
-function applyLoadedCloudData(data){
-  data=data||{};
-  try{
-    if(Array.isArray(data.mj_products)){products=data.mj_products;localStorage.setItem('mj_products',JSON.stringify(products));renderProducts();renderStock();renderDashboardLowStock();populateSaleProducts();populateQuoteProducts();populatePurchaseProducts();}
-    if(Array.isArray(data.mj_clients)){clients=data.mj_clients;localStorage.setItem('mj_clients',JSON.stringify(clients));renderClients();populateSaleClients();populateQuoteClients();}
-    if(Array.isArray(data.mj_suppliers)){suppliers=data.mj_suppliers;localStorage.setItem('mj_suppliers',JSON.stringify(suppliers));renderSuppliers();populatePurchaseSuppliers();}
-    if(Array.isArray(data.mj_quotes)){quotes=data.mj_quotes.map(normalizeQuote);localStorage.setItem('mj_quotes',JSON.stringify(quotes));renderQuotes();}
-    if(Array.isArray(data.mj_sales)){sales=data.mj_sales;localStorage.setItem('mj_sales',JSON.stringify(sales));renderSales();}
-    if(Array.isArray(data.mj_purchases)){purchases=data.mj_purchases;localStorage.setItem('mj_purchases',JSON.stringify(purchases));renderPurchases();}
-    if(Array.isArray(data.mj_financial_transactions)){financialTransactions=data.mj_financial_transactions;localStorage.setItem('mj_financial_transactions',JSON.stringify(financialTransactions));renderFinance();}
-    if(Array.isArray(data.mj_expenses)){expenses=data.mj_expenses;localStorage.setItem('mj_expenses',JSON.stringify(expenses));renderExpenses();}
-    renderDashboardLiveData();
-  }catch(err){console.warn('[MJ] Atualização dos dados carregados:',err);}
+
+
+// =====================================================
+// V11.27 - AUDITORIA
+// =====================================================
+let auditLogs = [];
+let auditLoaded = false;
+let auditLoading = false;
+function auditDateTime(v){
+  if(!v)return '-'; const d=new Date(v); return Number.isNaN(d.getTime())?String(v):d.toLocaleString('pt-BR');
 }
-window.addEventListener('mj-data-loaded',e=>applyLoadedCloudData(e.detail?.data||{}));
+function auditDay(v){
+  if(!v)return ''; const d=new Date(v); if(Number.isNaN(d.getTime()))return String(v).slice(0,10); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function auditActionText(log){return log.actionLabel||({login:'Login',logout:'Logout',finalizarVenda:'Finalização',cancelarVenda:'Cancelamento',finalizarCompra:'Finalização',cancelarCompra:'Cancelamento'}[log.action]||log.action||'Ação');}
+function auditTypeClass(log){return log.type==='error'?'audit-error':log.type==='warning'?'audit-warning':log.type==='security'?'audit-security':'audit-info';}
+function populateAuditFilters(){
+  const mod=document.getElementById('auditModuleFilter'),usr=document.getElementById('auditUserFilter'); if(!mod||!usr)return;
+  const currentMod=mod.value,currentUsr=usr.value;
+  const modules=[...new Set(auditLogs.map(x=>x.module).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'pt-BR'));
+  const users=[...new Map(auditLogs.filter(x=>x.userName||x.userEmail).map(x=>[x.userEmail||x.userName,{value:x.userEmail||x.userName,label:x.userName?(x.userEmail?`${x.userName} • ${x.userEmail}`:x.userName):x.userEmail}])).values()].sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
+  mod.innerHTML='<option value="">Todos os módulos</option>'+modules.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  usr.innerHTML='<option value="">Todos os usuários</option>'+users.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('');
+  if([...mod.options].some(o=>o.value===currentMod))mod.value=currentMod;
+  if([...usr.options].some(o=>o.value===currentUsr))usr.value=currentUsr;
+}
+function filteredAuditLogs(){
+  const start=document.getElementById('auditStartDate')?.value||'',end=document.getElementById('auditEndDate')?.value||'',mod=document.getElementById('auditModuleFilter')?.value||'',usr=document.getElementById('auditUserFilter')?.value||'',q=(document.getElementById('auditSearch')?.value||'').trim().toLowerCase();
+  return auditLogs.filter(log=>{
+    const day=auditDay(log.timestamp); if(start&&day<start)return false;if(end&&day>end)return false;if(mod&&String(log.module||'')!==mod)return false;if(usr&&String(log.userEmail||log.userName||'')!==usr)return false;
+    if(q){const hay=[log.userName,log.userEmail,log.module,log.action,log.actionLabel,log.recordId,log.recordLabel,log.details].join(' ').toLowerCase();if(!hay.includes(q))return false;}return true;
+  });
+}
+function renderAudit(){
+  const body=document.getElementById('auditBody'); if(!body)return;
+  populateAuditFilters(); const rows=filteredAuditLogs(); const today=currentISODate();
+  const users=new Set(rows.map(x=>x.userEmail||x.userName).filter(Boolean));
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('auditTotalCount',auditLogs.length);set('auditUsersCount',users.size);set('auditTodayCount',auditLogs.filter(x=>auditDay(x.timestamp)===today).length);set('auditErrorCount',auditLogs.filter(x=>x.type==='error'||x.action==='error').length);set('auditResultCount',`${rows.length} registro(s)`);
+  if(!rows.length){body.innerHTML='<tr><td colspan="6"><div class="empty-note">Nenhum registro encontrado para os filtros selecionados.</div></td></tr>';return;}
+  body.innerHTML=rows.map(log=>`<tr><td><b>${esc(auditDateTime(log.timestamp))}</b></td><td><div class="audit-user"><b>${esc(log.userName||'Sistema')}</b>${log.userEmail?`<small>${esc(log.userEmail)}</small>`:''}</div></td><td><span class="audit-module">${esc(log.module||'Sistema')}</span></td><td><span class="audit-action ${auditTypeClass(log)}">${esc(auditActionText(log))}</span></td><td><div class="audit-record"><b>${esc(log.recordLabel||log.recordId||'-')}</b>${log.recordId&&log.recordLabel&&log.recordId!==log.recordLabel?`<small>${esc(log.recordId)}</small>`:''}</div></td><td>${esc(log.details||log.actionDescription||'-')}</td></tr>`).join('');
+}
+async function refreshAudit(options={}){
+  if(auditLoading)return;
+  auditLoading=true;
+  const silent=!!options.silent;
+  const btn=document.getElementById('refreshAuditBtn');
+  const body=document.getElementById('auditBody');
+  if(btn){btn.disabled=true;btn.textContent='Atualizando...';}
+  if(!auditLoaded&&body){body.innerHTML='<tr><td colspan="6"><div class="empty-note">Carregando registros de auditoria...</div></td></tr>';}
+  try{
+    const res=await window.MJCloud.listAudit({limit:1000});
+    auditLogs=Array.isArray(res.data)?res.data:[];
+    auditLoaded=true;
+    renderAudit();
+    if(!silent)toast('Auditoria atualizada.');
+  }
+  catch(err){
+    if(body&&!auditLoaded)body.innerHTML='<tr><td colspan="6"><div class="empty-note">Não foi possível carregar a auditoria.</div></td></tr>';
+    toast(err.message||'Não foi possível atualizar a auditoria.');
+  }
+  finally{
+    auditLoading=false;
+    if(btn){btn.disabled=false;btn.textContent='↻ Atualizar registros';}
+  }
+}
+function initAudit(){
+  const nav=document.querySelector('#nav button[data-view="auditoria"]'); if(!nav)return;
+  // A auditoria é propositalmente carregada somente ao abrir o módulo.
+  nav.addEventListener('click',()=>setTimeout(()=>refreshAudit({silent:true}),0));
+  document.getElementById('refreshAuditBtn')?.addEventListener('click',()=>refreshAudit());
+  ['auditStartDate','auditEndDate','auditModuleFilter','auditUserFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAudit));
+  document.getElementById('auditSearch')?.addEventListener('input',renderAudit);
+  document.getElementById('clearAuditFilters')?.addEventListener('click',()=>{['auditStartDate','auditEndDate','auditModuleFilter','auditUserFilter','auditSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderAudit();});
+}
 
 function initUsersAndPermissions(){
-  applyCurrentUserUI();initSettingsTabs();
+  applyCurrentUserUI();initSettingsTabs();initAudit();
   document.getElementById('logoutBtn')?.addEventListener('click',()=>window.MJCloud.logout());
   document.getElementById('newUserBtn')?.addEventListener('click',()=>openUserModal());
   document.getElementById('saveUserBtn')?.addEventListener('click',saveSystemUser);
   document.querySelectorAll('[data-close-user-modal]').forEach(el=>el.addEventListener('click',closeUserModal));
   document.getElementById('userRole')?.addEventListener('change',e=>renderPermissionChecks(ROLE_DEFAULT_PERMISSIONS[e.target.value]||[]));
   document.getElementById('changePasswordBtn')?.addEventListener('click',changeMyPassword);
+  if(MJCurrentUser.role==='Administrador')loadUsers();
   const seller=document.getElementById('saleSeller');if(seller&&seller.value==='Caio')seller.value=MJCurrentUser.name||seller.value;
 }
 initUsersAndPermissions();

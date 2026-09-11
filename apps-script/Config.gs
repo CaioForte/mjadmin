@@ -1,6 +1,6 @@
 /** MJ ADMIN V11 - Configuração central */
 const MJ_DB = {
-  version: '11.25.0',
+  version: '11.27.2',
   sheets: {
     products: 'Produtos', clients: 'Clientes', suppliers: 'Fornecedores',
     quotes: 'Orcamentos', quoteItems: 'OrcamentosItens',
@@ -26,5 +26,5 @@ const HEADERS = {
   Configuracoes: ['chave','valor_json','updatedAt'],
   TransacoesInfinitePay: ['id','saleId','orderNsu','transactionNsu','slug','value','method','status','createdAt','paidAt','receiptUrl','updatedAt','json'],
   Usuarios: ['id','name','email','role','status','createdAt','updatedAt','json','passwordHash','passwordSalt','permissions','lastLoginAt'],
-  Logs: ['timestamp','action','key','details']
+  Logs: ['timestamp','action','key','details','id','userId','userName','userEmail','module','recordId','recordLabel','type','json']
 };

@@ -47,5 +47,5 @@ o retorno deve conter:
 Depois abra o `index.html`. A tela de login deve aparecer antes da sincronização dos dados.
 
 
-## V11.25 - carregamento otimizado
-Substitua também `Bootstrap.gs`, `Code.gs` e `Config.gs` e publique uma nova versão do Web App. Não há novas colunas nem abas, portanto não é necessário executar `setupDatabase()` novamente. Após o deploy, `?action=ping` deve retornar `11.25.0`.
+## V11.27 — Auditoria
+Adicione o arquivo `Auditoria.gs` ao projeto do Apps Script e atualize `Code.gs`, `Config.gs`, `Utils.gs`, `Usuarios.gs`, `Bootstrap.gs`, `Financeiro.gs`, `Despesas.gs` e `Orcamentos.gs`. Publique uma nova versão do Web App. A aba `Logs` será ampliada automaticamente na primeira chamada; não é necessário executar `setupDatabase()` manualmente.
